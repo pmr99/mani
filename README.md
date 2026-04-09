@@ -2,6 +2,16 @@
 
 A comprehensive personal finance dashboard that connects to your real bank accounts via Plaid, providing rich visualizations, spending insights, investment tracking, and net worth analysis.
 
+## Screenshots
+
+| Dashboard | Wealth |
+|-----------|--------|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Wealth](docs/screenshots/wealth.png) |
+
+| Transactions | Insights |
+|-------------|----------|
+| ![Transactions](docs/screenshots/transactions.png) | ![Insights](docs/screenshots/insights.png) |
+
 ## Features
 
 - **Dashboard** - Savings tracking, spending analysis, investment portfolio, cash balance forecast
