@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme {
+  --color-dark-base: #0f1117;
+  --color-dark-card: #1a1d29;
+  --color-dark-elevated: #252839;
+  --color-dark-border: #2a2d3d;
+  --color-dark-hover: #2f3347;
+}
+
+body {
+  background-color: #0f1117;
+  color: #f3f4f6;
+}
+
+/* Scrollbar styling for dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0f1117;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2d3d;
+  border-radius: 3px;
+}
+
+/* Dark form inputs */
+input, select {
+  color-scheme: dark;
+}
+
+/* Slide-in animation for panels */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(30px) scale(0.95); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes fadeScale {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-in {
+  animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.animate-fade {
+  animation: fadeScale 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Smooth grid transitions */
+.grid-transition {
+  transition: grid-template-columns 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Force dark tooltip text globally */
+.recharts-tooltip-label {
+  color: #9ca3af !important;
+}
+.recharts-tooltip-item {
+  color: #f3f4f6 !important;
+}
+.recharts-tooltip-item-name,
+.recharts-tooltip-item-separator,
+.recharts-tooltip-item-value {
+  color: #f3f4f6 !important;
+}
+
+/* Kill orange tap/focus highlight on charts */
+svg, .recharts-wrapper, .recharts-surface {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.recharts-wrapper:focus, .recharts-surface:focus {
+  outline: none;
+}
