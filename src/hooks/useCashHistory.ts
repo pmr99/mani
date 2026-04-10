@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { isFreeMode } from '../lib/freeMode'
 
 interface CashDailyValue {
   id: string
@@ -60,9 +61,9 @@ export function useCashHistory(options?: CashHistoryOptions) {
     fetchValues()
   }, [days, options?.accountId])
 
-  // Auto-sync on first load if no data
+  // Auto-sync on first load if no data (skip in free mode — uses paid API)
   useEffect(() => {
-    if (!loading && values.length === 0) {
+    if (!loading && values.length === 0 && !isFreeMode()) {
       syncHistory()
     }
   }, [loading, values.length])

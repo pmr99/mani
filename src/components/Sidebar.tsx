@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAccounts } from '../hooks/useAccounts'
 import { formatCurrency, ACCOUNT_TYPE_CONFIG } from '../lib/engines/utils'
+import { isFreeMode, setFreeMode } from '../lib/freeMode'
+import { SyncButton } from './SyncButton'
 
 const links = [
   { to: '/', label: 'Dashboard', icon: '*' },
@@ -127,12 +129,26 @@ export function Sidebar() {
         </>
       )}
 
-      {/* Bottom links */}
-      <div className="mt-auto pt-4 border-t border-[#2a2d3d] space-y-1">
-        <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-500 hover:text-gray-300 hover:bg-[#1a1d29] transition-colors">
-          <span className="w-5 text-center text-xs">?</span>
-          Settings
-        </button>
+      {/* Bottom — Sync + Mode */}
+      <div className="mt-auto pt-4 border-t border-[#2a2d3d] space-y-3">
+        <SyncButton />
+        <label className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#1a1d29] cursor-pointer transition-colors">
+          <div>
+            <p className="text-xs text-gray-400">Free Mode</p>
+            <p className="text-[10px] text-gray-600">Balances only, no API costs</p>
+          </div>
+          <div className="relative">
+            <input
+              type="checkbox"
+              checked={isFreeMode()}
+              onChange={(e) => { setFreeMode(e.target.checked); window.location.reload() }}
+              className="sr-only"
+            />
+            <div className={`w-8 h-4 rounded-full transition-colors ${isFreeMode() ? 'bg-emerald-500' : 'bg-[#2a2d3d]'}`}>
+              <div className={`w-3.5 h-3.5 rounded-full bg-white shadow transform transition-transform ${isFreeMode() ? 'translate-x-4' : 'translate-x-0.5'} mt-[1px]`} />
+            </div>
+          </div>
+        </label>
       </div>
     </aside>
   )

@@ -97,13 +97,32 @@ Open [http://localhost:5173](http://localhost:5173)
 - Sandbox: use `user_good` / `pass_good`
 - Development: use your real bank credentials
 
-## Plaid Environments
+## Free Mode vs Full Mode
 
-| Environment | Cost | Real Data | Connections |
-|------------|------|-----------|-------------|
-| Sandbox | Free | No (test) | Unlimited |
-| Development | Free | Yes | 100 |
-| Production | Paid | Yes | Unlimited |
+Mani has a **Free Mode** toggle in the sidebar that controls API usage:
+
+| | Free Mode | Full Mode |
+|---|---|---|
+| **API calls** | `/accounts/get` only (free, unlimited) | All Plaid products |
+| **Balances** | ✅ Real-time | ✅ Real-time |
+| **Net worth** | ✅ Tracked daily | ✅ Tracked daily |
+| **Account structure** | ✅ Full | ✅ Full |
+| **Transaction history** | ❌ Not available | ✅ Full history |
+| **Spending analysis** | ❌ Limited | ✅ Full breakdown |
+| **Investment holdings** | ❌ Totals only | ✅ Per-holding detail |
+| **Monthly cost** | **$0** | ~$0.30-0.50/account |
+
+Free Mode gives you a fully functional net worth tracker, balance dashboard, and asset distribution view — all without any Plaid costs.
+
+## Plaid Pricing
+
+| Product | Cost | Used By Mani |
+|---------|------|-------------|
+| `/accounts/get` | **Free, unlimited** | Balance refresh (Free Mode) |
+| Transactions | $0.30/account/month | Transaction sync (Full Mode) |
+| Investments Holdings | $0.18/account/month | Holdings detail (Full Mode) |
+| Investments Transactions | $0.35/account/month | Portfolio history (Full Mode) |
+| Limited Production | Free, 200 calls/product | Testing |
 
 ## License
 

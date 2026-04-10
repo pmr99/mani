@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { isFreeMode } from '../lib/freeMode'
 import type { PortfolioDailyValue } from '../types/database'
 
 interface PortfolioHistoryOptions {
@@ -59,9 +60,9 @@ export function usePortfolioHistory(options?: PortfolioHistoryOptions) {
     })
   }, [days, options?.accountId])
 
-  // Auto-sync on first load if no data exists
+  // Auto-sync on first load if no data exists (skip in free mode — uses paid API)
   useEffect(() => {
-    if (!loading && values.length === 0) {
+    if (!loading && values.length === 0 && !isFreeMode()) {
       syncHistory()
     }
   }, [loading, values.length])
