@@ -66,12 +66,28 @@ export function Sidebar() {
       ))}
 
       {/* Account Tree */}
+      <div className="border-t border-[#2a2d3d] mt-4 pt-4 mb-2 flex items-center justify-between px-3">
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Accounts</p>
+        <button
+          onClick={() => navigate('/accounts')}
+          className="text-xs text-[#6366f1] hover:text-[#818cf8] transition-colors font-medium"
+          title="Link a new account"
+        >
+          + Link
+        </button>
+      </div>
+
+      {grouped.length === 0 && (
+        <button
+          onClick={() => navigate('/accounts')}
+          className="mx-3 py-2 text-xs text-gray-600 hover:text-gray-400 text-center rounded-lg border border-dashed border-[#2a2d3d] hover:border-[#6366f1] transition-colors"
+        >
+          No accounts linked
+        </button>
+      )}
+
       {grouped.length > 0 && (
         <>
-          <div className="border-t border-[#2a2d3d] mt-4 pt-4 mb-2">
-            <p className="px-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Accounts</p>
-          </div>
-
           {grouped.map((group) => (
             <div key={group.type}>
               {/* Group header */}
