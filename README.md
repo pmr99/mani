@@ -32,12 +32,21 @@ React 19 + TypeScript + Vite + Tailwind CSS v4 + Recharts + Supabase + Plaid
 - A [Supabase](https://supabase.com) account (free tier)
 - A [Plaid](https://dashboard.plaid.com) account (free Development tier)
 
-### 1. Clone and Install
+### 1. Clone and Quick Setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/mani.git
+git clone https://github.com/pmr99/mani.git
 cd mani
+chmod +x setup.sh && ./setup.sh
+```
+
+The setup script will install dependencies, prompt for your Supabase credentials, and create your `.env` file.
+
+**Or manually:**
+```bash
 npm install
+cp .env.example .env
+# Edit .env with your Supabase URL and anon key
 ```
 
 ### 2. Set Up Supabase
