@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAccounts } from '../hooks/useAccounts'
 import { formatCurrency, ACCOUNT_TYPE_CONFIG } from '../lib/engines/utils'
@@ -155,9 +156,9 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Upgrade confirmation modal */}
-      {showUpgradeModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setShowUpgradeModal(false)}>
+      {/* Upgrade confirmation modal — portal to escape sidebar stacking context */}
+      {showUpgradeModal && createPortal(
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999]" onClick={() => setShowUpgradeModal(false)}>
           <div className="bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl p-6 w-[400px] shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-semibold text-white mb-2">Switch to Full Mode?</h3>
             <p className="text-sm text-gray-400 mb-4">
@@ -199,7 +200,8 @@ export function Sidebar() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </aside>
   )
