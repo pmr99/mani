@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { useFreeMode } from '../hooks/useFreeMode'
 import { BarChart, Bar, Cell, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { useTransactions } from '../hooks/useTransactions'
 import { useAccounts } from '../hooks/useAccounts'
@@ -28,6 +29,7 @@ const PERIODS: { key: TimePeriod; label: string; days: number }[] = [
 ]
 
 export function Transactions() {
+  const { isFree } = useFreeMode()
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('month')
   const [splitBy, setSplitBy] = useState<SplitBy>('overall')
   const [sortField, setSortField] = useState<'date' | 'amount'>('date')
@@ -195,6 +197,20 @@ export function Transactions() {
   function toggleSort(field: 'date' | 'amount') {
     if (sortField === field) setSortAsc(!sortAsc)
     else { setSortField(field); setSortAsc(false) }
+  }
+
+  if (isFree) {
+    return (
+      <div className="p-6 space-y-6">
+        <h1 className="text-2xl font-semibold text-white">Transactions</h1>
+        <div className="bg-gradient-to-r from-[#6366f1]/10 to-[#8b5cf6]/10 border border-[#6366f1]/20 rounded-2xl p-8 text-center">
+          <p className="text-4xl mb-3">📊</p>
+          <p className="text-lg font-semibold text-white mb-2">Transaction History</p>
+          <p className="text-sm text-gray-400 max-w-md mx-auto">View detailed transaction history, spending breakdowns by category and account, and recategorize transactions.</p>
+          <p className="text-xs text-gray-500 mt-4">Available in Full Mode · Toggle in sidebar</p>
+        </div>
+      </div>
+    )
   }
 
   return (

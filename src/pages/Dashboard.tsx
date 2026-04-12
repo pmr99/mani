@@ -16,6 +16,7 @@ import { computeNetWorth } from '../lib/engines/net-worth'
 import { computeInvestmentPortfolio } from '../lib/engines/investment-portfolio'
 import { computeForecast } from '../lib/engines/forecasting'
 import { SyncButton } from '../components/SyncButton'
+import { useFreeMode } from '../hooks/useFreeMode'
 import {
   Card, ChartLabel, SectionTitle, StatCard, MerchantBar, TransactionRow,
   BreakdownList, CategoryBadge, DonutChart, chartTooltipStyle as tt, chartAxisProps as ax, chartLegendStyle, CHART_HEIGHT,
@@ -102,6 +103,7 @@ function bucketByPeriod(txns: { date: string; amount: number }[], period: Period
 // Card and ChartLabel imported from ui.tsx
 
 export function Dashboard() {
+  const { isFree } = useFreeMode()
   const [period, setPeriod] = useState<Period>('monthly')
   const range = getDateRange(period) // only for overview strip
 
@@ -614,6 +616,128 @@ export function Dashboard() {
         </div>
       </div>
 
+      {/* ═══ FREE MODE DASHBOARD ═══ */}
+      {isFree && (
+        <div className="space-y-6">
+          {/* Net Worth Trend */}
+          <Card>
+            <ChartLabel>Net Worth Over Time</ChartLabel>
+            {snapshots.length > 1 ? (
+              <ResponsiveContainer width="100%" height={CHART_HEIGHT.large}>
+                <AreaChart data={snapshots.map((s) => ({ label: new Date(s.snapshot_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), value: s.net_worth }))}>
+                  <defs>
+                    <linearGradient id="freeNwGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="label" {...ax} />
+                  <YAxis {...ax} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={tt} wrapperStyle={{ zIndex: 50 }} />
+                  <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} fill="url(#freeNwGrad)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-3xl font-bold text-emerald-400">{formatCurrency(nwResult.netWorth)}</p>
+                <p className="text-xs text-gray-500 mt-2">Trend builds as you refresh daily</p>
+              </div>
+            )}
+          </Card>
+
+          {/* Asset Allocation + Debt Overview */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Assets by account */}
+            <Card>
+              <ChartLabel>Assets</ChartLabel>
+              <DonutChart
+                data={accounts
+                  .filter((a) => (a.type === 'depository' || a.type === 'investment') && (a.current_balance ?? 0) > 0)
+                  .map((a, i) => ({ name: a.name.replace('Plaid ', ''), value: a.current_balance ?? 0, color: CHART_COLORS[i % CHART_COLORS.length] }))}
+                height={CHART_HEIGHT.large}
+                colorMode="custom"
+                emptyMessage="No asset accounts"
+              />
+            </Card>
+
+            {/* Liabilities */}
+            <Card>
+              <ChartLabel>Liabilities</ChartLabel>
+              {accounts.filter((a) => (a.type === 'credit' || a.type === 'loan') && (a.current_balance ?? 0) > 0).length > 0 ? (
+                <div className="space-y-4">
+                  {accounts
+                    .filter((a) => (a.type === 'credit' || a.type === 'loan') && (a.current_balance ?? 0) > 0)
+                    .sort((a, b) => (b.current_balance ?? 0) - (a.current_balance ?? 0))
+                    .map((a, i) => {
+                      const bal = a.current_balance ?? 0
+                      const color = a.type === 'credit' ? '#f43f5e' : '#f59e0b'
+                      return (
+                        <div key={a.id} className="bg-[#252839] rounded-xl p-4">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
+                              <span className="text-sm text-gray-300">{a.name.replace('Plaid ', '')}</span>
+                            </div>
+                            <span className="text-sm font-bold" style={{ color }}>{formatCurrency(bal)}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                            <span>{a.type === 'credit' ? 'Credit Card' : 'Loan'}</span>
+                            {a.type === 'credit' && a.available_balance != null && (
+                              <span>· {formatCurrency(a.available_balance)} available</span>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  <div className="border-t border-[#2a2d3d] pt-3 flex justify-between">
+                    <span className="text-sm text-gray-500">Total Owed</span>
+                    <span className="text-sm font-bold text-rose-400">
+                      {formatCurrency(accounts.filter((a) => a.type === 'credit' || a.type === 'loan').reduce((s, a) => s + (a.current_balance ?? 0), 0))}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-600 text-sm py-12 text-center">No liabilities</p>
+              )}
+            </Card>
+          </div>
+
+          {/* All Accounts List */}
+          <Card>
+            <ChartLabel>All Accounts</ChartLabel>
+            <div className="space-y-2">
+              {accounts.map((a) => {
+                const config = { credit: { color: '#f43f5e', label: 'Credit' }, depository: { color: '#10b981', label: 'Bank' }, investment: { color: '#8b5cf6', label: 'Investment' }, loan: { color: '#f59e0b', label: 'Loan' } }[a.type] || { color: '#6b7280', label: a.type }
+                return (
+                  <div key={a.id} className="flex items-center justify-between py-2 border-b border-[#2a2d3d]/30 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: config.color }} />
+                      <div>
+                        <span className="text-sm text-white">{a.name}</span>
+                        {a.mask && <span className="text-xs text-gray-500 ml-1">****{a.mask}</span>}
+                      </div>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#252839] text-gray-500">{config.label}</span>
+                    </div>
+                    <span className={`text-sm font-semibold ${(a.type === 'credit' || a.type === 'loan') ? 'text-rose-400' : 'text-white'}`}>
+                      {(a.type === 'credit' || a.type === 'loan') ? '-' : ''}{formatCurrency(a.current_balance ?? 0)}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </Card>
+
+          {/* Upgrade prompt */}
+          <div className="bg-gradient-to-r from-[#6366f1]/10 to-[#8b5cf6]/10 border border-[#6366f1]/20 rounded-2xl p-5 text-center">
+            <p className="text-sm text-gray-300">Switch to <span className="text-[#6366f1] font-semibold">Full Mode</span> for transaction history, spending analysis, investment holdings, and smart insights</p>
+            <p className="text-[10px] text-gray-500 mt-1">~$3/month via Plaid · Toggle in sidebar</p>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ FULL MODE SECTIONS BELOW ═══ */}
+
+      {!isFree && <>
       {/* ═══ SAVINGS ═══ */}
       <div>
         <div className="flex items-center justify-between mb-3">
@@ -1149,6 +1273,7 @@ export function Dashboard() {
           </div>
         </div>
       </div>
+      </>}
     </div>
   )
 }

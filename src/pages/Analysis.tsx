@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useFreeMode } from '../hooks/useFreeMode'
 import {
   BarChart, Bar, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -75,6 +76,7 @@ function InlineStat({ label, value, color }: { label: string; value: string; col
 // ═══ Main page ═══
 
 export function Analysis() {
+  const { isFree } = useFreeMode()
   const { transactions, loading } = useTransactions({ months: 12 })
   const { accounts } = useAccounts()
   const { holdings } = useInvestments()
@@ -515,6 +517,20 @@ export function Analysis() {
   ])
 
   // ═══ Render ═══
+
+  if (isFree) {
+    return (
+      <div className="p-6 space-y-6">
+        <h1 className="text-2xl font-semibold text-white">Insights</h1>
+        <div className="bg-gradient-to-r from-[#6366f1]/10 to-[#8b5cf6]/10 border border-[#6366f1]/20 rounded-2xl p-8 text-center">
+          <p className="text-4xl mb-3">💡</p>
+          <p className="text-lg font-semibold text-white mb-2">Smart Financial Insights</p>
+          <p className="text-sm text-gray-400 max-w-md mx-auto">Get personalized spending insights, savings rate analysis, portfolio recommendations, and actionable financial advice.</p>
+          <p className="text-xs text-gray-500 mt-4">Available in Full Mode · Toggle in sidebar</p>
+        </div>
+      </div>
+    )
+  }
 
   if (loading) return <div className="p-6"><p className="text-sm text-gray-500">Loading...</p></div>
 

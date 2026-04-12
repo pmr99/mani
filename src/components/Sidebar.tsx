@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAccounts } from '../hooks/useAccounts'
 import { formatCurrency, ACCOUNT_TYPE_CONFIG } from '../lib/engines/utils'
-import { isFreeMode, setFreeMode } from '../lib/freeMode'
+import { useFreeMode } from '../hooks/useFreeMode'
 import { SyncButton } from './SyncButton'
 
 const links = [
@@ -18,6 +18,7 @@ export function Sidebar() {
   const { accounts } = useAccounts()
   const navigate = useNavigate()
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+  const freeMode = useFreeMode()
 
   // Group accounts by type
   const grouped = TYPE_ORDER
@@ -129,26 +130,28 @@ export function Sidebar() {
         </>
       )}
 
-      {/* Bottom — Sync + Mode */}
+      {/* Bottom — Sync + Mode Toggle */}
       <div className="mt-auto pt-4 border-t border-[#2a2d3d] space-y-3">
         <SyncButton />
-        <label className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#1a1d29] cursor-pointer transition-colors">
-          <div>
-            <p className="text-xs text-gray-400">Free Mode</p>
-            <p className="text-[10px] text-gray-600">Balances only, no API costs</p>
+        <div className="px-3">
+          <div className="flex items-center gap-2 mb-2">
+            <button
+              onClick={() => { freeMode.setMode(true) }}
+              className={`flex-1 py-1.5 text-[10px] font-medium rounded-lg text-center transition-all ${freeMode.isFree ? 'bg-emerald-500 text-white' : 'text-gray-500 hover:text-gray-300 bg-[#252839]'}`}
+            >
+              Free
+            </button>
+            <button
+              onClick={() => { freeMode.setMode(false) }}
+              className={`flex-1 py-1.5 text-[10px] font-medium rounded-lg text-center transition-all ${!freeMode.isFree ? 'bg-[#6366f1] text-white' : 'text-gray-500 hover:text-gray-300 bg-[#252839]'}`}
+            >
+              Full
+            </button>
           </div>
-          <div className="relative">
-            <input
-              type="checkbox"
-              checked={isFreeMode()}
-              onChange={(e) => { setFreeMode(e.target.checked); window.location.reload() }}
-              className="sr-only"
-            />
-            <div className={`w-8 h-4 rounded-full transition-colors ${isFreeMode() ? 'bg-emerald-500' : 'bg-[#2a2d3d]'}`}>
-              <div className={`w-3.5 h-3.5 rounded-full bg-white shadow transform transition-transform ${isFreeMode() ? 'translate-x-4' : 'translate-x-0.5'} mt-[1px]`} />
-            </div>
-          </div>
-        </label>
+          <p className="text-[9px] text-gray-600 text-center">
+            {freeMode.isFree ? 'Balances only · $0/mo' : 'All features · ~$3/mo'}
+          </p>
+        </div>
       </div>
     </aside>
   )
