@@ -5,18 +5,16 @@ import { supabase } from '../lib/supabase'
 
 export function OAuthReturn() {
   const navigate = useNavigate()
-  const [linkToken, setLinkToken] = useState<string | null>(null)
 
-  useEffect(() => {
-    supabase.functions.invoke('create-link-token').then(({ data, error }) => {
-      if (error) { console.error('Failed to create link token:', error); return }
-      setLinkToken(data.link_token)
-    })
-  }, [])
+  // The link token was stored before the user left for the bank OAuth page
+  const [linkToken] = useState(() => localStorage.getItem('plaid_link_token'))
+
+  // The real redirect URI is the portfolio URL with oauth_state_id — stored by oauth-return.html
+  const [receivedRedirectUri] = useState(() => localStorage.getItem('plaid_oauth_redirect_uri'))
 
   const { open, ready } = usePlaidLink({
     token: linkToken,
-    receivedRedirectUri: window.location.href,
+    receivedRedirectUri: receivedRedirectUri ?? undefined,
     onSuccess: async (publicToken, metadata) => {
       try {
         await supabase.functions.invoke('exchange-token', {
@@ -25,17 +23,28 @@ export function OAuthReturn() {
             institution: metadata.institution,
           },
         })
+        // Clean up stored OAuth state
+        localStorage.removeItem('plaid_link_token')
+        localStorage.removeItem('plaid_oauth_redirect_uri')
       } catch (err) {
         console.error('Failed to exchange token:', err)
       }
       navigate('/accounts')
     },
-    onExit: () => navigate('/accounts'),
+    onExit: () => {
+      localStorage.removeItem('plaid_oauth_redirect_uri')
+      navigate('/accounts')
+    },
   })
 
   useEffect(() => {
+    if (!linkToken || !receivedRedirectUri) {
+      // No OAuth state — stale/direct navigation, go home
+      navigate('/')
+      return
+    }
     if (ready) open()
-  }, [ready, open])
+  }, [ready, open, linkToken, receivedRedirectUri, navigate])
 
   return (
     <div className="flex items-center justify-center h-full">

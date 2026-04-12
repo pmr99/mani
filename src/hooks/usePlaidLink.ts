@@ -11,6 +11,10 @@ export function usePlaidLink(onSuccess?: () => void) {
     try {
       const { data, error } = await supabase.functions.invoke('create-link-token')
       if (error) throw error
+      // Store token so OAuthReturn page can use it after redirect
+      localStorage.setItem('plaid_link_token', data.link_token)
+      // Store this app's origin so oauth-return.html knows where to redirect back
+      localStorage.setItem('mani_app_origin', window.location.origin)
       setLinkToken(data.link_token)
     } catch (err) {
       console.error('Failed to create link token:', err)
