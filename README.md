@@ -29,11 +29,12 @@ React 19 + TypeScript + Vite + Tailwind CSS v4 + Recharts + Supabase + Plaid
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org) 18+
-- A [Supabase](https://supabase.com) account (free tier)
-- A [Plaid](https://dashboard.plaid.com) account (free Limited Production)
+Before running setup, create accounts at:
+1. [Supabase](https://supabase.com) (free tier) — get your **Project URL**, **anon key**, and **access token**
+2. [Plaid](https://dashboard.plaid.com) (free) — get your **Client ID** and **Secret**
+3. Install [Node.js](https://nodejs.org) 18+ and optionally [Supabase CLI](https://supabase.com/docs/guides/cli) (`brew install supabase/tap/supabase`)
 
-### Step 1: Clone and Setup
+### Setup (one command)
 
 ```bash
 git clone https://github.com/pmr99/mani.git
@@ -41,41 +42,14 @@ cd mani
 chmod +x setup.sh && ./setup.sh
 ```
 
-The script will:
-- Install npm dependencies
-- Prompt for your **Supabase Project URL** and **anon key** (from [Project Settings > API](https://supabase.com/dashboard))
-- Create your `.env` file
+The script handles everything interactively:
+- ✅ Installs npm dependencies
+- ✅ Creates `.env` with your Supabase credentials
+- ✅ Runs all 5 database migrations via Supabase API
+- ✅ Deploys all edge functions
+- ✅ Configures Plaid secrets in Supabase
 
-### Step 2: Configure Supabase
-
-**a) Run database migrations** — go to your Supabase [SQL Editor](https://supabase.com/dashboard) and run each file in order:
-
-```
-supabase/migrations/001_initial_schema.sql
-supabase/migrations/002_enhancements.sql
-supabase/migrations/003_investment_transactions.sql
-supabase/migrations/004_cash_daily_values.sql
-supabase/migrations/005_category_overrides.sql
-```
-
-**b) Add Plaid secrets** — in Supabase [Edge Function Secrets](https://supabase.com/dashboard), add:
-
-| Secret | Value |
-|--------|-------|
-| `PLAID_CLIENT_ID` | Your Plaid client ID |
-| `PLAID_SECRET` | Your Plaid secret |
-| `PLAID_ENV` | `sandbox` (testing) or `production` (real banks) |
-
-**c) Deploy edge functions:**
-
-```bash
-brew install supabase/tap/supabase
-supabase login
-export SUPABASE_ACCESS_TOKEN=your_token
-supabase functions deploy --project-ref your-project-ref --no-verify-jwt --use-api
-```
-
-### Step 3: Run
+### Run
 
 ```bash
 npm run dev
