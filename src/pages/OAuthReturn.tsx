@@ -6,11 +6,15 @@ import { supabase } from '../lib/supabase'
 export function OAuthReturn() {
   const navigate = useNavigate()
 
-  // The link token was stored before the user left for the bank OAuth page
+  // Link token stored before the user left for the bank's OAuth page
   const [linkToken] = useState(() => localStorage.getItem('plaid_link_token'))
 
-  // Stored by oauth-return.html in sessionStorage (tab-scoped, clears on close)
-  const [receivedRedirectUri] = useState(() => sessionStorage.getItem('plaid_oauth_redirect_uri'))
+  // receivedRedirectUri travels via URL param (sessionStorage/localStorage are domain-scoped
+  // and won't cross from pradeepmanirathnam.com to localhost)
+  const [receivedRedirectUri] = useState(() => {
+    const params = new URLSearchParams(window.location.search)
+    return params.get('uri') ? decodeURIComponent(params.get('uri')!) : null
+  })
 
   const { open, ready } = usePlaidLink({
     token: linkToken,
@@ -23,23 +27,18 @@ export function OAuthReturn() {
             institution: metadata.institution,
           },
         })
-        // Clean up stored OAuth state
         localStorage.removeItem('plaid_link_token')
-        sessionStorage.removeItem('plaid_oauth_redirect_uri')
       } catch (err) {
         console.error('Failed to exchange token:', err)
       }
       navigate('/accounts')
     },
-    onExit: () => {
-      sessionStorage.removeItem('plaid_oauth_redirect_uri')
-      navigate('/accounts')
-    },
+    onExit: () => navigate('/accounts'),
   })
 
   useEffect(() => {
     if (!linkToken || !receivedRedirectUri) {
-      // No OAuth state — stale/direct navigation, go home
+      // Missing OAuth state — stale or direct navigation, go home
       navigate('/')
       return
     }
