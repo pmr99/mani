@@ -19,6 +19,7 @@ export function Sidebar() {
   const navigate = useNavigate()
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const freeMode = useFreeMode()
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
 
   // Group accounts by type
   const grouped = TYPE_ORDER
@@ -130,9 +131,9 @@ export function Sidebar() {
         </>
       )}
 
-      {/* Bottom — Sync + Mode Toggle */}
+      {/* Bottom — Mode Toggle + Confirmation */}
       <div className="mt-auto pt-4 border-t border-[#2a2d3d] space-y-3">
-        <SyncButton />
+        {!freeMode.isFree && <SyncButton />}
         <div className="px-3">
           <div className="flex items-center gap-2 mb-2">
             <button
@@ -142,7 +143,7 @@ export function Sidebar() {
               Free
             </button>
             <button
-              onClick={() => { freeMode.setMode(false) }}
+              onClick={() => { if (freeMode.isFree) { setShowUpgradeModal(true) } }}
               className={`flex-1 py-1.5 text-[10px] font-medium rounded-lg text-center transition-all ${!freeMode.isFree ? 'bg-[#6366f1] text-white' : 'text-gray-500 hover:text-gray-300 bg-[#252839]'}`}
             >
               Full
@@ -153,6 +154,53 @@ export function Sidebar() {
           </p>
         </div>
       </div>
+
+      {/* Upgrade confirmation modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setShowUpgradeModal(false)}>
+          <div className="bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl p-6 w-[400px] shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-white mb-2">Switch to Full Mode?</h3>
+            <p className="text-sm text-gray-400 mb-4">
+              Full Mode uses paid Plaid API calls to fetch transaction history, investment holdings, and spending data.
+            </p>
+            <div className="bg-[#252839] rounded-xl p-4 mb-4 space-y-2">
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-400">Transactions</span>
+                <span className="text-gray-300">$0.30/account/month</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-400">Investment Holdings</span>
+                <span className="text-gray-300">$0.18/account/month</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-400">Investment History</span>
+                <span className="text-gray-300">$0.35/account/month</span>
+              </div>
+              <div className="border-t border-[#2a2d3d] pt-2 flex justify-between text-xs">
+                <span className="text-gray-400">Estimated total</span>
+                <span className="text-white font-semibold">~$3/month</span>
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-500 mb-4">
+              Charges are from Plaid, not Mani. You can switch back to Free Mode anytime.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowUpgradeModal(false)}
+                className="flex-1 px-4 py-2 text-sm text-gray-400 border border-[#2a2d3d] rounded-lg hover:bg-[#252839] transition-colors"
+              >
+                Stay on Free
+              </button>
+              <button
+                onClick={() => { setShowUpgradeModal(false); freeMode.setMode(false) }}
+                className="flex-1 px-4 py-2 text-sm bg-[#6366f1] text-white rounded-lg hover:bg-[#5558e6] transition-colors"
+              >
+                Switch to Full
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   )
 }

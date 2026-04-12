@@ -1,15 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { isFreeMode, setFreeMode as setFreeModeStorage } from '../lib/freeMode'
 
-// Reactive hook for free mode — re-renders when toggled
+// Reactive hook for free mode — reloads page on toggle to update all components
 export function useFreeMode() {
-  const [free, setFree] = useState(isFreeMode())
+  const [free] = useState(isFreeMode())
 
-  function toggle() {
-    const newVal = !free
-    setFreeModeStorage(newVal)
-    setFree(newVal)
+  function setMode(v: boolean) {
+    setFreeModeStorage(v)
+    window.location.reload()
   }
 
-  return { isFree: free, toggle, setMode: (v: boolean) => { setFreeModeStorage(v); setFree(v) } }
+  return { isFree: free, toggle: () => setMode(!free), setMode }
 }

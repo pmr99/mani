@@ -1,3 +1,4 @@
+import { useFreeMode } from '../hooks/useFreeMode'
 import { useAccounts } from '../hooks/useAccounts'
 import { useTransactions } from '../hooks/useTransactions'
 import { useInvestments } from '../hooks/useInvestments'
@@ -18,6 +19,7 @@ export function Accounts() {
   const [searchParams] = useSearchParams()
   const typeFilter = searchParams.get('type')
 
+  const { isFree } = useFreeMode()
   const { accounts, loading, refetch } = useAccounts()
   const { transactions } = useTransactions({ months: 1 })
   const { createLinkToken, open, ready, loading: linkLoading } = usePlaidLink(refetch)
@@ -94,7 +96,7 @@ export function Accounts() {
         </div>
 
         {/* Investment accounts: show holdings breakdown */}
-        {isInvestment && (
+        {isInvestment && !isFree && (
           <>
             {acctHoldings.length > 0 ? (
               <div className="grid grid-cols-2 gap-4">
@@ -140,7 +142,7 @@ export function Accounts() {
         )}
 
         {/* Credit/Checking: spending breakdown + monthly chart */}
-        {(isCredit || account.type === 'depository') && (
+        {!isFree && (isCredit || account.type === 'depository') && (
           <div className="grid grid-cols-2 gap-4">
             {categoryBreakdown.length > 0 && (
               <Card>
@@ -164,6 +166,23 @@ export function Accounts() {
           </div>
         )}
 
+        {/* Free mode: prominent balance for credit/depository */}
+        {isFree && (isCredit || account.type === 'depository') && (
+          <Card>
+            <ChartLabel>{isCredit ? 'Credit Card Balance' : 'Account Balance'}</ChartLabel>
+            <div className="py-6 text-center space-y-4">
+              <p className="text-4xl font-bold text-white">{formatCurrency(account.current_balance ?? 0)}</p>
+              {isCredit && account.available_balance != null && (
+                <p className="text-lg text-emerald-400">Available Credit: {formatCurrency(account.available_balance)}</p>
+              )}
+              {!isCredit && account.available_balance != null && account.available_balance !== account.current_balance && (
+                <p className="text-lg text-blue-400">Available: {formatCurrency(account.available_balance)}</p>
+              )}
+              <p className="text-xs text-gray-500">Transaction data is not available in Free Mode</p>
+            </div>
+          </Card>
+        )}
+
         {/* Loan accounts: payoff info */}
         {isLoan && (
           <Card>
@@ -182,7 +201,7 @@ export function Accounts() {
         )}
 
         {/* Recent transactions — for non-investment accounts */}
-        {!isInvestment && (
+        {!isFree && !isInvestment && (
           <Card>
             <ChartLabel>Recent Transactions</ChartLabel>
             {acctTxns.length > 0 ? (

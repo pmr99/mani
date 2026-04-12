@@ -647,58 +647,92 @@ export function Dashboard() {
 
           {/* Asset Allocation + Debt Overview */}
           <div className="grid grid-cols-2 gap-4">
-            {/* Assets by account */}
+            {/* Assets — donut left, labels right */}
             <Card>
               <ChartLabel>Assets</ChartLabel>
-              <DonutChart
-                data={accounts
+              {(() => {
+                const assetData = accounts
                   .filter((a) => (a.type === 'depository' || a.type === 'investment') && (a.current_balance ?? 0) > 0)
-                  .map((a, i) => ({ name: a.name.replace('Plaid ', ''), value: a.current_balance ?? 0, color: CHART_COLORS[i % CHART_COLORS.length] }))}
-                height={CHART_HEIGHT.large}
-                colorMode="custom"
-                emptyMessage="No asset accounts"
-              />
+                  .map((a, i) => ({ name: a.name.replace('Plaid ', ''), value: a.current_balance ?? 0, type: a.type, color: CHART_COLORS[i % CHART_COLORS.length] }))
+                  .sort((a, b) => b.value - a.value)
+                const assetTotal = assetData.reduce((s, a) => s + a.value, 0)
+                return assetData.length > 0 ? (
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <DonutChart data={assetData} height={220} colorMode="custom" showLegend={false} emptyMessage="" />
+                    </div>
+                    <div className="w-[140px] shrink-0 space-y-0 overflow-y-auto py-2" style={{ maxHeight: 220 }}>
+                      {assetData.map((a, i) => {
+                        const pct = assetTotal > 0 ? (a.value / assetTotal) * 100 : 0
+                        return (
+                          <div key={i} className="py-1 border-b border-[#2a2d3d]/30 last:border-0">
+                            <div className="flex items-center gap-1">
+                              <div className="w-1.5 h-1.5 rounded-sm shrink-0" style={{ backgroundColor: a.color }} />
+                              <span className="text-[10px] text-gray-400 truncate">{a.name}</span>
+                            </div>
+                            <p className="text-[11px] text-gray-200 font-medium pl-2.5">{formatCurrency(a.value)}</p>
+                          </div>
+                        )
+                      })}
+                      <div className="pt-1">
+                        <p className="text-[10px] text-gray-500">Total</p>
+                        <p className="text-xs text-emerald-400 font-bold">{formatCurrency(assetTotal)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : <p className="text-gray-600 text-sm py-12 text-center">No asset accounts</p>
+              })()}
             </Card>
 
             {/* Liabilities */}
             <Card>
               <ChartLabel>Liabilities</ChartLabel>
-              {accounts.filter((a) => (a.type === 'credit' || a.type === 'loan') && (a.current_balance ?? 0) > 0).length > 0 ? (
-                <div className="space-y-4">
-                  {accounts
-                    .filter((a) => (a.type === 'credit' || a.type === 'loan') && (a.current_balance ?? 0) > 0)
-                    .sort((a, b) => (b.current_balance ?? 0) - (a.current_balance ?? 0))
-                    .map((a, i) => {
-                      const bal = a.current_balance ?? 0
-                      const color = a.type === 'credit' ? '#f43f5e' : '#f59e0b'
-                      return (
-                        <div key={a.id} className="bg-[#252839] rounded-xl p-4">
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
-                              <span className="text-sm text-gray-300">{a.name.replace('Plaid ', '')}</span>
+              {(() => {
+                const liabAccounts = accounts
+                  .filter((a) => (a.type === 'credit' || a.type === 'loan') && (a.current_balance ?? 0) > 0)
+                  .sort((a, b) => (b.current_balance ?? 0) - (a.current_balance ?? 0))
+                const liabTotal = liabAccounts.reduce((s, a) => s + (a.current_balance ?? 0), 0)
+                if (liabAccounts.length === 0) return <p className="text-gray-600 text-sm py-12 text-center">No liabilities</p>
+                return (
+                  <div>
+                    {/* Total + proportion bar */}
+                    <div className="mb-4">
+                      <p className="text-2xl font-bold text-rose-400">{formatCurrency(liabTotal)}</p>
+                      <div className="flex h-3 rounded-full overflow-hidden mt-2">
+                        {liabAccounts.map((a, i) => {
+                          const pct = liabTotal > 0 ? ((a.current_balance ?? 0) / liabTotal) * 100 : 0
+                          return <div key={a.id} className="h-full" style={{ width: `${pct}%`, backgroundColor: a.type === 'credit' ? '#f43f5e' : '#f59e0b' }} />
+                        })}
+                      </div>
+                      <div className="flex justify-between mt-1">
+                        <span className="text-[10px] text-rose-400">Credit Cards</span>
+                        <span className="text-[10px] text-amber-400">Loans</span>
+                      </div>
+                    </div>
+                    {/* Account list */}
+                    <div className="space-y-2">
+                      {liabAccounts.map((a) => {
+                        const bal = a.current_balance ?? 0
+                        const pct = liabTotal > 0 ? (bal / liabTotal) * 100 : 0
+                        const color = a.type === 'credit' ? '#f43f5e' : '#f59e0b'
+                        return (
+                          <div key={a.id} className="flex items-center justify-between py-1.5 border-b border-[#2a2d3d]/30 last:border-0 text-xs">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                              <span className="text-gray-300 truncate">{a.name.replace('Plaid ', '')}</span>
+                              <span className="text-[9px] text-gray-600 shrink-0">{a.type === 'credit' ? 'Card' : 'Loan'}</span>
                             </div>
-                            <span className="text-sm font-bold" style={{ color }}>{formatCurrency(bal)}</span>
+                            <div className="flex items-center gap-2 shrink-0 ml-2">
+                              <span className="text-gray-500">{pct.toFixed(0)}%</span>
+                              <span className="font-medium" style={{ color }}>{formatCurrency(bal)}</span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                            <span>{a.type === 'credit' ? 'Credit Card' : 'Loan'}</span>
-                            {a.type === 'credit' && a.available_balance != null && (
-                              <span>· {formatCurrency(a.available_balance)} available</span>
-                            )}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  <div className="border-t border-[#2a2d3d] pt-3 flex justify-between">
-                    <span className="text-sm text-gray-500">Total Owed</span>
-                    <span className="text-sm font-bold text-rose-400">
-                      {formatCurrency(accounts.filter((a) => a.type === 'credit' || a.type === 'loan').reduce((s, a) => s + (a.current_balance ?? 0), 0))}
-                    </span>
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <p className="text-gray-600 text-sm py-12 text-center">No liabilities</p>
-              )}
+                )
+              })()}
             </Card>
           </div>
 
