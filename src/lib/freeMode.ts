@@ -1,14 +1,38 @@
-// Free Mode — only uses /accounts/get (free unlimited Plaid calls)
-// When enabled: balances, net worth, account structure all work
-// When disabled: full transaction history, investment holdings, spending analysis
+// Mode Detection
+// Plaid charges per connected account per month (not per API call).
+// Once a user has synced transactions, they're already paying — no reason to limit features.
+//
+// Logic:
+// 1. If user has transaction data in DB → already paying → Full Mode (no popup)
+// 2. If no transaction data → Free Mode (balance-only, show upgrade popup on Full switch)
+// 3. User can manually override via localStorage
 
-const STORAGE_KEY = 'mani_free_mode'
+const OVERRIDE_KEY = 'mani_mode_override' // 'free' | 'full' | null (auto)
 
+export function getModeOverride(): 'free' | 'full' | null {
+  if (typeof window === 'undefined') return null
+  const val = localStorage.getItem(OVERRIDE_KEY)
+  if (val === 'free' || val === 'full') return val
+  return null
+}
+
+export function setModeOverride(mode: 'free' | 'full' | null): void {
+  if (mode === null) {
+    localStorage.removeItem(OVERRIDE_KEY)
+  } else {
+    localStorage.setItem(OVERRIDE_KEY, mode)
+  }
+}
+
+// Legacy compat
 export function isFreeMode(): boolean {
-  if (typeof window === 'undefined') return false
-  return localStorage.getItem(STORAGE_KEY) === 'true'
+  const override = getModeOverride()
+  if (override === 'free') return true
+  if (override === 'full') return false
+  // Auto: default to free (hook will check DB for transactions)
+  return true
 }
 
 export function setFreeMode(enabled: boolean): void {
-  localStorage.setItem(STORAGE_KEY, String(enabled))
+  setModeOverride(enabled ? 'free' : 'full')
 }

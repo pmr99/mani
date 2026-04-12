@@ -1,14 +1,60 @@
-import { useState } from 'react'
-import { isFreeMode, setFreeMode as setFreeModeStorage } from '../lib/freeMode'
+import { useState, useEffect } from 'react'
+import { getModeOverride, setModeOverride } from '../lib/freeMode'
+import { supabase } from '../lib/supabase'
 
-// Reactive hook for free mode — reloads page on toggle to update all components
+// Auto-detects mode: if user has transactions in DB, they're already paying → Full Mode
+// User can manually override. Plaid charges per account/month not per call,
+// so once paying, unlimited syncs are free.
+
 export function useFreeMode() {
-  const [free] = useState(isFreeMode())
+  const [mode, setMode] = useState<'free' | 'full'>('free')
+  const [loading, setLoading] = useState(true)
+  const [hasPaidData, setHasPaidData] = useState(false)
 
-  function setMode(v: boolean) {
-    setFreeModeStorage(v)
+  useEffect(() => {
+    async function detect() {
+      const override = getModeOverride()
+
+      // Check if user already has transaction data (meaning they've used paid APIs)
+      const { data } = await supabase
+        .from('transactions')
+        .select('id')
+        .limit(1)
+      const hasTransactions = (data?.length ?? 0) > 0
+      setHasPaidData(hasTransactions)
+
+      if (override) {
+        // User explicitly chose a mode
+        setMode(override)
+      } else if (hasTransactions) {
+        // Auto-detect: has paid data → Full Mode (already paying per-account/month)
+        setMode('full')
+      } else {
+        // No data, no override → Free Mode
+        setMode('free')
+      }
+      setLoading(false)
+    }
+    detect()
+  }, [])
+
+  const isFree = mode === 'free'
+
+  function setModeAndReload(newMode: 'free' | 'full') {
+    setModeOverride(newMode)
     window.location.reload()
   }
 
-  return { isFree: free, toggle: () => setMode(!free), setMode }
+  // Should we show the paid API warning popup?
+  // Only if user has NEVER used paid APIs before (no transaction data)
+  const shouldShowUpgradeWarning = !hasPaidData
+
+  return {
+    isFree,
+    loading,
+    hasPaidData,
+    shouldShowUpgradeWarning,
+    setMode: setModeAndReload,
+    toggle: () => setModeAndReload(isFree ? 'full' : 'free'),
+  }
 }

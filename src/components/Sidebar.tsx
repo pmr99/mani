@@ -132,26 +132,32 @@ export function Sidebar() {
         </>
       )}
 
-      {/* Bottom — Mode Toggle + Confirmation */}
+      {/* Bottom — Mode Toggle + Sync */}
       <div className="mt-auto pt-4 border-t border-[#2a2d3d] space-y-3">
         {!freeMode.isFree && <SyncButton />}
         <div className="px-3">
           <div className="flex items-center gap-2 mb-2">
             <button
-              onClick={() => { freeMode.setMode(true) }}
+              onClick={() => freeMode.setMode('free')}
               className={`flex-1 py-1.5 text-[10px] font-medium rounded-lg text-center transition-all ${freeMode.isFree ? 'bg-emerald-500 text-white' : 'text-gray-500 hover:text-gray-300 bg-[#252839]'}`}
             >
               Free
             </button>
             <button
-              onClick={() => { if (freeMode.isFree) { setShowUpgradeModal(true) } }}
+              onClick={() => {
+                if (freeMode.isFree && freeMode.shouldShowUpgradeWarning) {
+                  setShowUpgradeModal(true) // First time — show pricing warning
+                } else {
+                  freeMode.setMode('full') // Already paying — switch directly
+                }
+              }}
               className={`flex-1 py-1.5 text-[10px] font-medium rounded-lg text-center transition-all ${!freeMode.isFree ? 'bg-[#6366f1] text-white' : 'text-gray-500 hover:text-gray-300 bg-[#252839]'}`}
             >
               Full
             </button>
           </div>
           <p className="text-[9px] text-gray-600 text-center">
-            {freeMode.isFree ? 'Balances only · $0/mo' : 'All features · ~$3/mo'}
+            {freeMode.isFree ? 'Balances only · $0/mo' : freeMode.hasPaidData ? 'All features · already active' : 'All features · ~$3/mo'}
           </p>
         </div>
       </div>
@@ -193,7 +199,7 @@ export function Sidebar() {
                 Stay on Free
               </button>
               <button
-                onClick={() => { setShowUpgradeModal(false); freeMode.setMode(false) }}
+                onClick={() => { setShowUpgradeModal(false); freeMode.setMode('full') }}
                 className="flex-1 px-4 py-2 text-sm bg-[#6366f1] text-white rounded-lg hover:bg-[#5558e6] transition-colors"
               >
                 Switch to Full
