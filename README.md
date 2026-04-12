@@ -29,10 +29,37 @@ React 19 + TypeScript + Vite + Tailwind CSS v4 + Recharts + Supabase + Plaid
 
 ### Prerequisites
 
-Before running setup, create accounts at:
-1. [Supabase](https://supabase.com) (free tier) — get your **Project URL**, **anon key**, and **access token**
-2. [Plaid](https://dashboard.plaid.com) (free) — get your **Client ID** and **Secret**
-3. Install [Node.js](https://nodejs.org) 18+ and optionally [Supabase CLI](https://supabase.com/docs/guides/cli) (`brew install supabase/tap/supabase`)
+You need 3 things before running setup. All are free.
+
+#### 1. Install Node.js
+Download from [nodejs.org](https://nodejs.org) (v18+). Verify: `node -v`
+
+#### 2. Create a Supabase Project (free)
+Supabase is the database backend. Takes ~2 minutes.
+
+1. Go to [supabase.com](https://supabase.com) → Sign up (free)
+2. Click **New Project** → pick a name, set a DB password, choose a region
+3. Wait ~1 minute for it to provision
+4. Get your credentials (you'll paste these into the setup script):
+
+| What | Where to find it |
+|------|-----------------|
+| **Project URL** | Project Settings → API → Project URL (`https://xxx.supabase.co`) |
+| **Anon Key** | Project Settings → API → `anon` `public` key (starts with `eyJ...`) |
+| **Access Token** | [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens) → Generate New Token |
+
+#### 3. Create a Plaid Account (free)
+Plaid connects to your bank accounts. Takes ~1 minute.
+
+1. Go to [dashboard.plaid.com](https://dashboard.plaid.com) → Sign up
+2. Get your credentials:
+
+| What | Where to find it |
+|------|-----------------|
+| **Client ID** | Team Settings → Keys → client_id |
+| **Secret** | Team Settings → Keys → Sandbox secret (for testing) or Production secret (for real banks) |
+
+> **Note:** Sandbox uses fake test data (free, unlimited). Production uses real bank data (free for 200 API calls, then ~$0.30/account/month). You can start with Sandbox and switch later.
 
 ### Setup (one command)
 
