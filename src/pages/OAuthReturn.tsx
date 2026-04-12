@@ -9,8 +9,8 @@ export function OAuthReturn() {
   // The link token was stored before the user left for the bank OAuth page
   const [linkToken] = useState(() => localStorage.getItem('plaid_link_token'))
 
-  // The real redirect URI is the portfolio URL with oauth_state_id — stored by oauth-return.html
-  const [receivedRedirectUri] = useState(() => localStorage.getItem('plaid_oauth_redirect_uri'))
+  // Stored by oauth-return.html in sessionStorage (tab-scoped, clears on close)
+  const [receivedRedirectUri] = useState(() => sessionStorage.getItem('plaid_oauth_redirect_uri'))
 
   const { open, ready } = usePlaidLink({
     token: linkToken,
@@ -25,14 +25,14 @@ export function OAuthReturn() {
         })
         // Clean up stored OAuth state
         localStorage.removeItem('plaid_link_token')
-        localStorage.removeItem('plaid_oauth_redirect_uri')
+        sessionStorage.removeItem('plaid_oauth_redirect_uri')
       } catch (err) {
         console.error('Failed to exchange token:', err)
       }
       navigate('/accounts')
     },
     onExit: () => {
-      localStorage.removeItem('plaid_oauth_redirect_uri')
+      sessionStorage.removeItem('plaid_oauth_redirect_uri')
       navigate('/accounts')
     },
   })
