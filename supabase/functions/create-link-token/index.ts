@@ -29,10 +29,11 @@ serve(async (req) => {
         client_id: PLAID_CLIENT_ID,
         secret: PLAID_SECRET,
         user: { client_user_id: 'personal-user' },
-        client_name: 'Finance Tracker',
+        client_name: 'Mani',
         products: ['transactions', 'investments'],
         country_codes: ['US'],
         language: 'en',
+        redirect_uri: PLAID_ENV === 'production' ? 'https://www.pradeepmanirathnam.com/oauth-return.html' : undefined,
       }),
     })
 
