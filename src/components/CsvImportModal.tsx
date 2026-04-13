@@ -80,42 +80,83 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
     setImportError(null)
 
     try {
-      // 1. Create one plaid_items row for the CSV source
-      const { data: plaidItem, error: itemErr } = await supabase
+      const institutionId = `csv_${institutionName.toLowerCase().replace(/\s+/g, '_')}`
+
+      // 1. Find or create plaid_items row for this institution
+      const { data: existingItems } = await supabase
         .from('plaid_items')
-        .insert({
-          access_token: 'csv-import',
-          institution_id: `csv_${institutionName.toLowerCase().replace(/\s+/g, '_')}`,
-          institution_name: institutionName,
-        })
-        .select()
-        .single()
+        .select('id')
+        .eq('institution_id', institutionId)
+        .limit(1)
 
-      if (itemErr) throw new Error(`Failed to create institution: ${itemErr.message}`)
+      let plaidItemId: string
 
-      // 2. Create an account + holdings for each parsed account
-      for (const acct of allAccounts) {
-        const { data: account, error: acctErr } = await supabase
-          .from('accounts')
+      if (existingItems && existingItems.length > 0) {
+        plaidItemId = existingItems[0].id
+        // Update last synced timestamp
+        await supabase.from('plaid_items').update({ last_synced_at: new Date().toISOString() }).eq('id', plaidItemId)
+      } else {
+        const { data: newItem, error: itemErr } = await supabase
+          .from('plaid_items')
           .insert({
-            plaid_item_id: plaidItem.id,
-            plaid_account_id: `csv-${institutionName.toLowerCase().replace(/\s+/g, '-')}-${acct.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Date.now()}`,
-            name: `${institutionName} — ${acct.name}`,
-            type: 'investment',
-            subtype: acct.name.toLowerCase().includes('401') ? '401k'
-              : acct.name.toLowerCase().includes('roth') ? 'roth ira'
-              : acct.name.toLowerCase().includes('ira') ? 'ira'
-              : acct.name.toLowerCase().includes('hsa') ? 'hsa'
-              : 'brokerage',
-            current_balance: acct.totalValue,
+            access_token: 'csv-import',
+            institution_id: institutionId,
+            institution_name: institutionName,
           })
           .select()
           .single()
+        if (itemErr) throw new Error(`Failed to create institution: ${itemErr.message}`)
+        plaidItemId = newItem.id
+      }
 
-        if (acctErr) throw new Error(`Failed to create account "${acct.name}": ${acctErr.message}`)
+      // 2. For each parsed account: find or create, then replace holdings
+      for (const acct of allAccounts) {
+        // Stable account ID based on institution + account name (no timestamp)
+        const stableAccountId = `csv-${institutionId}-${acct.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`
 
+        // Check if account already exists
+        const { data: existingAccts } = await supabase
+          .from('accounts')
+          .select('id')
+          .eq('plaid_account_id', stableAccountId)
+          .limit(1)
+
+        let accountId: string
+
+        if (existingAccts && existingAccts.length > 0) {
+          accountId = existingAccts[0].id
+          // Update balance
+          await supabase.from('accounts').update({
+            current_balance: acct.totalValue,
+            updated_at: new Date().toISOString(),
+          }).eq('id', accountId)
+
+          // Delete old holdings — they'll be replaced with fresh data
+          await supabase.from('investment_holdings').delete().eq('account_id', accountId)
+        } else {
+          const { data: newAcct, error: acctErr } = await supabase
+            .from('accounts')
+            .insert({
+              plaid_item_id: plaidItemId,
+              plaid_account_id: stableAccountId,
+              name: `${institutionName} — ${acct.name}`,
+              type: 'investment',
+              subtype: acct.name.toLowerCase().includes('401') ? '401k'
+                : acct.name.toLowerCase().includes('roth') ? 'roth ira'
+                : acct.name.toLowerCase().includes('ira') ? 'ira'
+                : acct.name.toLowerCase().includes('hsa') ? 'hsa'
+                : 'brokerage',
+              current_balance: acct.totalValue,
+            })
+            .select()
+            .single()
+          if (acctErr) throw new Error(`Failed to create account "${acct.name}": ${acctErr.message}`)
+          accountId = newAcct.id
+        }
+
+        // Insert fresh holdings
         const holdingRows = acct.holdings.map((h) => ({
-          account_id: account.id,
+          account_id: accountId,
           ticker_symbol: h.ticker_symbol,
           security_name: h.security_name,
           quantity: h.quantity,
