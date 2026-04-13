@@ -685,7 +685,7 @@ export function Dashboard() {
               </ResponsiveContainer>
             ) : (
               <div className="text-center py-12">
-                <p className="text-3xl font-bold text-emerald-400">{formatCurrency(nwResult.netWorth)}</p>
+                <p className="text-3xl font-bold text-emerald-400" onClick={privacy.toggle}>{pm(formatCurrency(nwResult.netWorth))}</p>
                 <p className="text-xs text-gray-500 mt-2">Trend builds as you refresh daily</p>
               </div>
             )}
@@ -783,7 +783,7 @@ export function Dashboard() {
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#252839] text-gray-500 shrink-0">{config.label}</span>
                     </div>
                     <span className={`text-sm font-semibold shrink-0 ml-3 whitespace-nowrap ${(a.type === 'credit' || a.type === 'loan') ? 'text-rose-400' : 'text-white'}`}>
-                      {(a.type === 'credit' || a.type === 'loan') ? '-' : ''}{formatCurrency(a.current_balance ?? 0)}
+                      {pm(`${(a.type === 'credit' || a.type === 'loan') ? '-' : ''}${formatCurrency(a.current_balance ?? 0)}`)}
                     </span>
                   </div>
                 )

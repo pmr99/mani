@@ -21,7 +21,7 @@ export function usePrivacy() {
   const mask = useCallback((value: string) => {
     if (revealed) return value
     // Replace digits with bullet characters, keep $ and commas
-    return value.replace(/[\d]/g, '•')
+    return value.replace(/[\d]/g, 'X')
   }, [revealed])
 
   return { revealed, toggle, mask }
