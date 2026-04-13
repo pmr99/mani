@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { supabase } from '../lib/supabase'
-import { parseFidelityCsv, parseGenericCsv, type ParsedHolding, type CsvParseResult } from '../lib/csvParsers'
+import { parseFidelityCsv, parseGenericCsv, type CsvParseResult } from '../lib/csvParsers'
 import { formatCurrency } from '../lib/engines/utils'
 
 interface CsvImportModalProps {
@@ -24,7 +24,6 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
       const text = e.target?.result as string
       const result = format === 'fidelity' ? parseFidelityCsv(text) : parseGenericCsv(text)
       setParseResult(result)
-      if (result.accountName) setInstitutionName(result.accountName)
       setStep('preview')
     }
     reader.readAsText(file)
@@ -43,12 +42,12 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
   }, [handleFile])
 
   const doImport = async () => {
-    if (!parseResult || parseResult.holdings.length === 0) return
+    if (!parseResult || parseResult.accounts.length === 0) return
     setStep('importing')
     setImportError(null)
 
     try {
-      // 1. Create plaid_items row for CSV source
+      // 1. Create one plaid_items row for the CSV source
       const { data: plaidItem, error: itemErr } = await supabase
         .from('plaid_items')
         .insert({
@@ -61,39 +60,42 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
 
       if (itemErr) throw new Error(`Failed to create institution: ${itemErr.message}`)
 
-      // 2. Create accounts row
-      const totalValue = parseResult.holdings.reduce((s, h) => s + h.current_value, 0)
-      const { data: account, error: acctErr } = await supabase
-        .from('accounts')
-        .insert({
-          plaid_item_id: plaidItem.id,
-          plaid_account_id: `csv-${institutionName.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
-          name: `${institutionName} Investments`,
-          type: 'investment',
-          subtype: 'brokerage',
-          current_balance: totalValue,
-        })
-        .select()
-        .single()
+      // 2. Create an account + holdings for each parsed account
+      for (const acct of parseResult.accounts) {
+        const { data: account, error: acctErr } = await supabase
+          .from('accounts')
+          .insert({
+            plaid_item_id: plaidItem.id,
+            plaid_account_id: `csv-${institutionName.toLowerCase().replace(/\s+/g, '-')}-${acct.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Date.now()}`,
+            name: `${institutionName} — ${acct.name}`,
+            type: 'investment',
+            subtype: acct.name.toLowerCase().includes('401') ? '401k'
+              : acct.name.toLowerCase().includes('roth') ? 'roth ira'
+              : acct.name.toLowerCase().includes('ira') ? 'ira'
+              : 'brokerage',
+            current_balance: acct.totalValue,
+          })
+          .select()
+          .single()
 
-      if (acctErr) throw new Error(`Failed to create account: ${acctErr.message}`)
+        if (acctErr) throw new Error(`Failed to create account "${acct.name}": ${acctErr.message}`)
 
-      // 3. Insert holdings
-      const holdingRows = parseResult.holdings.map((h) => ({
-        account_id: account.id,
-        ticker_symbol: h.ticker_symbol,
-        security_name: h.security_name,
-        quantity: h.quantity,
-        cost_basis: h.cost_basis,
-        current_value: h.current_value,
-        asset_class: h.asset_class,
-      }))
+        const holdingRows = acct.holdings.map((h) => ({
+          account_id: account.id,
+          ticker_symbol: h.ticker_symbol,
+          security_name: h.security_name,
+          quantity: h.quantity,
+          cost_basis: h.cost_basis,
+          current_value: h.current_value,
+          asset_class: h.asset_class,
+        }))
 
-      const { error: holdErr } = await supabase
-        .from('investment_holdings')
-        .insert(holdingRows)
+        const { error: holdErr } = await supabase
+          .from('investment_holdings')
+          .insert(holdingRows)
 
-      if (holdErr) throw new Error(`Failed to import holdings: ${holdErr.message}`)
+        if (holdErr) throw new Error(`Failed to import holdings for "${acct.name}": ${holdErr.message}`)
+      }
 
       setStep('done')
       onSuccess()
@@ -103,15 +105,14 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
     }
   }
 
-  const totalValue = parseResult?.holdings.reduce((s, h) => s + h.current_value, 0) ?? 0
-  const totalCost = parseResult?.holdings.reduce((s, h) => s + (h.cost_basis ?? 0), 0) ?? 0
+  const totalHoldings = parseResult?.accounts.reduce((s, a) => s + a.holdings.length, 0) ?? 0
+  const totalValue = parseResult?.accounts.reduce((s, a) => s + a.totalValue, 0) ?? 0
+  const totalCost = parseResult?.accounts.reduce((s, a) => s + a.holdings.reduce((ss, h) => ss + (h.cost_basis ?? 0), 0), 0) ?? 0
 
   const modal = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Modal */}
       <div className="relative bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2d3d]">
@@ -123,7 +124,6 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
         <div className="px-6 py-5 overflow-auto flex-1">
           {step === 'upload' && (
             <div className="space-y-4">
-              {/* Format selector */}
               <div>
                 <label className="text-xs text-gray-400 block mb-1.5">CSV Format</label>
                 <div className="flex gap-2">
@@ -143,7 +143,6 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
                 </div>
               </div>
 
-              {/* Institution name */}
               <div>
                 <label className="text-xs text-gray-400 block mb-1.5">Institution Name</label>
                 <input
@@ -155,7 +154,6 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
                 />
               </div>
 
-              {/* Drop zone */}
               <div
                 onDrop={onDrop}
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
@@ -172,7 +170,7 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
                 </p>
                 <p className="text-gray-600 text-xs mt-2">
                   {format === 'fidelity'
-                    ? 'Export from Fidelity: Positions page → Download'
+                    ? 'Export from Fidelity: Portfolio → Positions → Download'
                     : 'Any CSV with Symbol, Quantity, and Value columns'}
                 </p>
                 <input
@@ -188,7 +186,6 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
 
           {step === 'preview' && parseResult && (
             <div className="space-y-4">
-              {/* Errors */}
               {parseResult.errors.length > 0 && (
                 <div className="bg-rose-500/10 border border-rose-500/30 rounded-lg p-3">
                   {parseResult.errors.map((e, i) => (
@@ -206,8 +203,12 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
               {/* Summary */}
               <div className="flex gap-4">
                 <div className="bg-[#252839] rounded-lg px-4 py-3 flex-1">
+                  <p className="text-xs text-gray-500">Accounts</p>
+                  <p className="text-lg font-semibold text-white">{parseResult.accounts.length}</p>
+                </div>
+                <div className="bg-[#252839] rounded-lg px-4 py-3 flex-1">
                   <p className="text-xs text-gray-500">Holdings</p>
-                  <p className="text-lg font-semibold text-white">{parseResult.holdings.length}</p>
+                  <p className="text-lg font-semibold text-white">{totalHoldings}</p>
                 </div>
                 <div className="bg-[#252839] rounded-lg px-4 py-3 flex-1">
                   <p className="text-xs text-gray-500">Total Value</p>
@@ -219,38 +220,46 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
                 </div>
               </div>
 
-              {/* Holdings table */}
-              <div className="max-h-[300px] overflow-auto rounded-lg border border-[#2a2d3d]">
-                <table className="w-full text-sm">
-                  <thead className="bg-[#252839] sticky top-0">
-                    <tr className="text-left text-gray-500">
-                      <th className="px-3 py-2 font-medium">Symbol</th>
-                      <th className="px-3 py-2 font-medium">Name</th>
-                      <th className="px-3 py-2 font-medium text-right">Qty</th>
-                      <th className="px-3 py-2 font-medium text-right">Value</th>
-                      <th className="px-3 py-2 font-medium text-right">Cost</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#2a2d3d]/50">
-                    {parseResult.holdings.map((h, i) => (
-                      <tr key={i} className="text-gray-300">
-                        <td className="px-3 py-2 font-mono text-xs">{h.ticker_symbol}</td>
-                        <td className="px-3 py-2 text-xs truncate max-w-[200px]">{h.security_name}</td>
-                        <td className="px-3 py-2 text-xs text-right">{h.quantity.toFixed(2)}</td>
-                        <td className="px-3 py-2 text-xs text-right text-emerald-400">{formatCurrency(h.current_value)}</td>
-                        <td className="px-3 py-2 text-xs text-right">{h.cost_basis != null ? formatCurrency(h.cost_basis) : '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {/* Per-account holdings tables */}
+              {parseResult.accounts.map((acct, ai) => (
+                <div key={ai} className="rounded-lg border border-[#2a2d3d] overflow-hidden">
+                  <div className="px-4 py-2.5 bg-[#252839] flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-200">{acct.name}</span>
+                    <span className="text-xs text-gray-500">{acct.holdings.length} holdings · {formatCurrency(acct.totalValue)}</span>
+                  </div>
+                  <div className="max-h-[200px] overflow-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-[#1f2233] sticky top-0">
+                        <tr className="text-left text-gray-500">
+                          <th className="px-3 py-1.5 font-medium text-xs">Symbol</th>
+                          <th className="px-3 py-1.5 font-medium text-xs">Name</th>
+                          <th className="px-3 py-1.5 font-medium text-xs text-right">Qty</th>
+                          <th className="px-3 py-1.5 font-medium text-xs text-right">Value</th>
+                          <th className="px-3 py-1.5 font-medium text-xs text-right">Cost</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#2a2d3d]/50">
+                        {acct.holdings.map((h, i) => (
+                          <tr key={i} className="text-gray-300">
+                            <td className="px-3 py-1.5 font-mono text-xs">{h.ticker_symbol}</td>
+                            <td className="px-3 py-1.5 text-xs truncate max-w-[180px]">{h.security_name}</td>
+                            <td className="px-3 py-1.5 text-xs text-right">{h.quantity.toFixed(2)}</td>
+                            <td className="px-3 py-1.5 text-xs text-right text-emerald-400">{formatCurrency(h.current_value)}</td>
+                            <td className="px-3 py-1.5 text-xs text-right">{h.cost_basis != null ? formatCurrency(h.cost_basis) : '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
           {step === 'importing' && (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="w-8 h-8 border-2 border-[#6366f1] border-t-transparent rounded-full animate-spin mb-4" />
-              <p className="text-gray-400 text-sm">Importing {parseResult?.holdings.length} holdings...</p>
+              <p className="text-gray-400 text-sm">Importing {parseResult?.accounts.length} accounts, {totalHoldings} holdings...</p>
             </div>
           )}
 
@@ -261,7 +270,7 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
               </div>
               <p className="text-white font-medium">Import Complete</p>
               <p className="text-gray-500 text-sm mt-1">
-                {parseResult?.holdings.length} holdings added to {institutionName}
+                {parseResult?.accounts.length} accounts, {totalHoldings} holdings added from {institutionName}
               </p>
             </div>
           )}
@@ -279,10 +288,10 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
               </button>
               <button
                 onClick={doImport}
-                disabled={!parseResult || parseResult.holdings.length === 0}
+                disabled={!parseResult || totalHoldings === 0}
                 className="px-4 py-2 text-sm bg-[#6366f1] text-white rounded-lg hover:bg-[#5558e6] disabled:opacity-50 transition-colors"
               >
-                Import {parseResult?.holdings.length} Holdings
+                Import {parseResult?.accounts.length} Accounts
               </button>
             </>
           )}
