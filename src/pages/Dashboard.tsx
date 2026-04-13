@@ -17,6 +17,7 @@ import { computeInvestmentPortfolio } from '../lib/engines/investment-portfolio'
 import { computeForecast } from '../lib/engines/forecasting'
 import { SyncButton } from '../components/SyncButton'
 import { useFreeMode } from '../hooks/useFreeMode'
+import { usePrivacy } from '../hooks/usePrivacy'
 import {
   Card, ChartLabel, SectionTitle, StatCard, MerchantBar, TransactionRow,
   BreakdownList, CategoryBadge, DonutChart, chartTooltipStyle as tt, chartAxisProps as ax, chartLegendStyle, CHART_HEIGHT,
@@ -135,6 +136,9 @@ export function Dashboard() {
   const totalCash = accounts.filter((a) => a.type === 'depository').reduce((s, a) => s + (a.current_balance ?? 0), 0)
   const totalInvest = investAccounts.reduce((s, a) => s + (a.current_balance ?? 0), 0)
   const totalCredit = accounts.filter((a) => a.type === 'credit').reduce((s, a) => s + (a.current_balance ?? 0), 0)
+  const totalLoan = accounts.filter((a) => a.type === 'loan').reduce((s, a) => s + (a.current_balance ?? 0), 0)
+  const totalAssets = totalCash + totalInvest
+  const totalLiabilities = totalCredit + totalLoan
 
   const nwResult = useMemo(() => computeNetWorth(accounts, snapshots), [accounts, snapshots])
   const portfolio = useMemo(() => computeInvestmentPortfolio(holdings), [holdings])
@@ -586,33 +590,75 @@ export function Dashboard() {
     return []
   }, [investView, investAccounts, holdings])
 
+  const privacy = usePrivacy()
+  const pm = privacy.mask // shorthand
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-white">Dashboard</h1>
         {portfolioSyncing && <span className="text-xs text-purple-400 animate-pulse">Syncing investments...</span>}
       </div>
 
-      {/* Summary Strip with its own period toggle */}
-      <div className="bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl p-4">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Overview</p>
-          <div className="flex gap-0.5 bg-[#252839] p-0.5 rounded-lg">
-            {PERIODS.map((p) => (
-              <button key={p.key} onClick={() => setPeriod(p.key)}
-                className={`px-2.5 py-1 text-[10px] font-medium rounded-md transition-all ${period === p.key ? 'bg-[#6366f1] text-white' : 'text-gray-500 hover:text-gray-300'}`}>
-                {p.label}
-              </button>
-            ))}
+      {/* ── Mobile: Compact hero card ── */}
+      <div className="md:hidden">
+        <div className="bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl p-4" onClick={privacy.toggle}>
+          <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Net Worth</p>
+          <div className="flex items-baseline gap-3">
+            <p className="text-3xl font-bold text-white">{pm(formatCurrency(nwResult.netWorth))}</p>
+            {nwResult.monthlyChange !== 0 && (
+              <span className={`text-sm font-medium ${nwResult.monthlyChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {nwResult.monthlyChange >= 0 ? '▲' : '▼'} {pm(formatCurrency(Math.abs(nwResult.monthlyChange)))}
+              </span>
+            )}
           </div>
+          <div className="flex items-center gap-4 mt-3">
+            <div className="flex-1">
+              <p className="text-[10px] text-gray-500">Assets</p>
+              <p className="text-sm font-semibold text-emerald-400">{pm(formatCurrency(totalAssets))}</p>
+            </div>
+            <div className="flex-1">
+              <p className="text-[10px] text-gray-500">Liabilities</p>
+              <p className="text-sm font-semibold text-rose-400">{pm(formatCurrency(totalLiabilities))}</p>
+            </div>
+            <div className="flex-1">
+              <p className="text-[10px] text-gray-500">Cash</p>
+              <p className="text-sm font-semibold text-blue-400">{pm(formatCurrency(totalCash))}</p>
+            </div>
+          </div>
+          {/* Proportion bar */}
+          <div className="flex h-2 rounded-full overflow-hidden mt-3">
+            <div className="h-full bg-emerald-500" style={{ width: `${totalAssets + totalLiabilities > 0 ? (totalAssets / (totalAssets + totalLiabilities)) * 100 : 100}%` }} />
+            <div className="h-full bg-rose-500" style={{ width: `${totalAssets + totalLiabilities > 0 ? (totalLiabilities / (totalAssets + totalLiabilities)) * 100 : 0}%` }} />
+          </div>
+          {!privacy.revealed && (
+            <p className="text-[10px] text-gray-600 text-center mt-2">Tap to reveal</p>
+          )}
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-          <StatCard label="Net Worth" value={nwResult.netWorth} color="#10b981" change={nwResult.monthlyChange} />
-          <StatCard label="Income" value={totalIncome} color="#10b981" />
-          <StatCard label="Expenses" value={totalExpenses} color="#f43f5e" />
-          <StatCard label="Cash" value={totalCash} color="#3b82f6" />
-          <StatCard label="Investments" value={totalInvest} color="#8b5cf6" />
+      </div>
+
+      {/* ── Desktop: Full stat cards ── */}
+      <div className="hidden md:block">
+        <div className="bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Overview</p>
+            <div className="flex gap-0.5 bg-[#252839] p-0.5 rounded-lg">
+              {PERIODS.map((p) => (
+                <button key={p.key} onClick={() => setPeriod(p.key)}
+                  className={`px-2.5 py-1 text-[10px] font-medium rounded-md transition-all ${period === p.key ? 'bg-[#6366f1] text-white' : 'text-gray-500 hover:text-gray-300'}`}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-5 gap-3">
+            <StatCard label="Net Worth" value={nwResult.netWorth} color="#10b981" change={nwResult.monthlyChange} />
+            <StatCard label="Income" value={totalIncome} color="#10b981" />
+            <StatCard label="Expenses" value={totalExpenses} color="#f43f5e" />
+            <StatCard label="Cash" value={totalCash} color="#3b82f6" />
+            <StatCard label="Investments" value={totalInvest} color="#8b5cf6" />
+          </div>
         </div>
       </div>
 
