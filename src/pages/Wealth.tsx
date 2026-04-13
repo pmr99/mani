@@ -357,7 +357,7 @@ export function Wealth() {
           <ChartLabel>Distribution by Account</ChartLabel>
           <DonutChart
             data={assetAccounts.map((a, i) => ({ name: a.name, value: a.value, color: CHART_COLORS[i % CHART_COLORS.length] }))}
-            height={CHART_HEIGHT.large} colorMode="custom" emptyMessage="No assets"
+            height={CHART_HEIGHT.medium} colorMode="custom" emptyMessage="No assets"
           />
         </Card>
       </div>

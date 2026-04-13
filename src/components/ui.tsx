@@ -340,7 +340,7 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
             outerRadius={outerR} innerRadius={innerR}
             strokeWidth={0} label={renderLabel} labelLine={false}
             animationBegin={0} animationDuration={500}
-            activeIndex={-1} activeShape={undefined}
+            activeIndex={[]} activeShape={false as any}
           >
             {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} cursor="pointer" />)}
           </Pie>
@@ -427,7 +427,7 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
             outerRadius={outerR} innerRadius={innerR}
             strokeWidth={0} label={renderLabel} labelLine={false}
             animationBegin={0} animationDuration={500}
-            activeIndex={-1} activeShape={undefined}
+            activeIndex={[]} activeShape={false as any}
           >
             {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} cursor="pointer" />)}
           </Pie>

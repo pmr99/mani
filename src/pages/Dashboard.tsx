@@ -730,15 +730,13 @@ export function Dashboard() {
                 const config = { credit: { color: '#f43f5e', label: 'Credit' }, depository: { color: '#10b981', label: 'Bank' }, investment: { color: '#8b5cf6', label: 'Investment' }, loan: { color: '#f59e0b', label: 'Loan' } }[a.type] || { color: '#6b7280', label: a.type }
                 return (
                   <div key={a.id} className="flex items-center justify-between py-2 border-b border-[#2a2d3d]/30 last:border-0">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: config.color }} />
-                      <div>
-                        <span className="text-sm text-white">{a.name}</span>
-                        {a.mask && <span className="text-xs text-gray-500 ml-1">****{a.mask}</span>}
-                      </div>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#252839] text-gray-500">{config.label}</span>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: config.color }} />
+                      <span className="text-sm text-white truncate">{a.name}</span>
+                      {a.mask && <span className="text-xs text-gray-500 shrink-0">****{a.mask}</span>}
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#252839] text-gray-500 shrink-0">{config.label}</span>
                     </div>
-                    <span className={`text-sm font-semibold ${(a.type === 'credit' || a.type === 'loan') ? 'text-rose-400' : 'text-white'}`}>
+                    <span className={`text-sm font-semibold shrink-0 ml-3 whitespace-nowrap ${(a.type === 'credit' || a.type === 'loan') ? 'text-rose-400' : 'text-white'}`}>
                       {(a.type === 'credit' || a.type === 'loan') ? '-' : ''}{formatCurrency(a.current_balance ?? 0)}
                     </span>
                   </div>
