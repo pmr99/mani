@@ -665,7 +665,7 @@ export function Dashboard() {
             <Card>
               <ChartLabel>Liabilities</ChartLabel>
               {(() => {
-                const CREDIT_COLORS = ['#f43f5e', '#ec4899', '#e11d48', '#fb7185', '#be185d']
+                const CREDIT_COLORS = ['#f43f5e', '#8b5cf6', '#3b82f6', '#ec4899', '#06b6d4']
                 const LOAN_COLORS = ['#f59e0b', '#f97316', '#d97706', '#ea580c', '#b45309']
                 let ci = 0, li = 0
                 const liabAccounts = accounts

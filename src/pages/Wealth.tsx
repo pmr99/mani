@@ -173,7 +173,7 @@ export function Wealth() {
 
   // Liabilities
   // Warm palette for liabilities — reds/pinks for credit, ambers/oranges for loans
-  const LIABILITY_COLORS_CREDIT = ['#f43f5e', '#ec4899', '#e11d48', '#fb7185', '#be185d']
+  const LIABILITY_COLORS_CREDIT = ['#f43f5e', '#8b5cf6', '#3b82f6', '#ec4899', '#06b6d4']
   const LIABILITY_COLORS_LOAN = ['#f59e0b', '#f97316', '#d97706', '#ea580c', '#b45309']
 
   const liabilityAccounts = useMemo(() => {
