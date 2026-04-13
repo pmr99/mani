@@ -46,20 +46,17 @@ function parseNumber(val: string | undefined): number | null {
 export function parseFidelityCsv(csvText: string): CsvParseResult {
   const errors: string[] = []
 
-  // Strip trailing commas and disclaimer text at bottom
-  const cleanedLines = csvText
-    .split('\n')
-    .filter((line) => !line.startsWith('"') && line.trim() !== '')
-    .map((line) => line.replace(/,\s*$/, ''))
-    .join('\n')
-
-  const { data, errors: parseErrors } = Papa.parse<Record<string, string>>(cleanedLines, {
+  // Let PapaParse handle line endings natively (handles \r\n, \r, \n, BOM, etc.)
+  // Skip disclaimer lines at bottom (start with ") via comments option
+  const { data, errors: parseErrors } = Papa.parse<Record<string, string>>(csvText, {
     header: true,
-    skipEmptyLines: true,
+    skipEmptyLines: 'greedy',
     transformHeader: (h) => h.trim(),
+    comments: '"',
   })
 
   if (parseErrors.length > 0) {
+    // Ignore FieldMismatch (trailing commas create an extra empty column — harmless)
     const real = parseErrors.filter((e) => e.type !== 'FieldMismatch')
     errors.push(...real.map((e) => `Row ${e.row}: ${e.message}`))
   }
