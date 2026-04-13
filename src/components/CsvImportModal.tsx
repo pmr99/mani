@@ -188,7 +188,7 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+      <div className="relative bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] mx-4 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2d3d]">
           <h2 className="text-lg font-semibold text-white">Import CSV</h2>

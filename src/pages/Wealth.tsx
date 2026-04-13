@@ -222,7 +222,7 @@ export function Wealth() {
 
       {/* Net Worth Hero */}
       <div className="bg-gradient-to-r from-[#10b981]/15 to-[#06b6d4]/10 border border-[#10b981]/20 rounded-2xl p-6">
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           {/* Left: Net Worth */}
           <div>
             <p className="text-sm text-gray-400">Net worth</p>
@@ -236,7 +236,7 @@ export function Wealth() {
 
           {/* Right: Assets & Liabilities */}
           <div className="flex gap-6">
-            <div className="text-right">
+            <div className="sm:text-right">
               <p className="text-[10px] text-gray-500 uppercase tracking-wider">Assets</p>
               <p className="text-2xl font-bold text-emerald-400 mt-1">{formatCurrency(nw.totalAssets)}</p>
               <div className="flex items-center gap-2 mt-1 justify-end">
@@ -380,7 +380,7 @@ export function Wealth() {
           })}
         </div>
         {/* Tile grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {assetTypeDistribution.map((item) => {
             const pct = totalAssets > 0 ? (item.value / totalAssets) * 100 : 0
             return (
@@ -409,8 +409,8 @@ export function Wealth() {
           <Card><p className="text-gray-600 text-sm py-8 text-center">No liabilities</p></Card>
         ) : (<>
           {/* Total — prominent hero */}
-          <div className="bg-gradient-to-r from-rose-500/15 to-amber-500/10 border border-rose-500/20 rounded-2xl p-6 mb-4">
-            <div className="flex items-center justify-between">
+          <div className="bg-gradient-to-r from-rose-500/15 to-amber-500/10 border border-rose-500/20 rounded-2xl p-4 sm:p-6 mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <p className="text-sm text-gray-400">Total Outstanding</p>
                 <p className="text-4xl font-bold text-rose-400 mt-1">{formatCurrency(totalLiabilities)}</p>
@@ -436,7 +436,7 @@ export function Wealth() {
             </div>
           </div>
           {/* Individual account cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {liabilityAccounts.map((a, i) => {
               const pct = totalLiabilities > 0 ? (a.value / totalLiabilities) * 100 : 0
               return (

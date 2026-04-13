@@ -607,7 +607,7 @@ export function Dashboard() {
             ))}
           </div>
         </div>
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           <StatCard label="Net Worth" value={nwResult.netWorth} color="#10b981" change={nwResult.monthlyChange} />
           <StatCard label="Income" value={totalIncome} color="#10b981" />
           <StatCard label="Expenses" value={totalExpenses} color="#f43f5e" />
@@ -646,7 +646,7 @@ export function Dashboard() {
           </Card>
 
           {/* Asset Allocation + Debt Overview */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Assets — donut with built-in legend */}
             <Card>
               <ChartLabel>Assets</ChartLabel>
@@ -778,8 +778,8 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-4">
-          <Card className="col-span-7 relative select-none">
+        <div className="flex flex-col md:grid md:grid-cols-12 gap-4">
+          <Card className="md:col-span-7 relative select-none">
             <ChartLabel>{cfView === 'weekly' ? 'By Week (Last 12 Weeks)' : 'By Month (Last 6 Months)'}</ChartLabel>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT.large}>
               <ComposedChart data={cfComparisonData} onMouseDown={handleCfMouseDown} onMouseMove={handleCfMouseMove} onMouseUp={handleCfMouseUp}>
@@ -850,7 +850,7 @@ export function Dashboard() {
             )}
           </Card>
 
-          <div className="col-span-5 space-y-4">
+          <div className="md:col-span-5 space-y-4">
             <div className={`rounded-2xl p-5 border ${heroSavings >= 0 ? 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border-emerald-400/30' : 'bg-gradient-to-br from-rose-500/15 to-rose-600/5 border-rose-500/20'}`}>
               <p className={`text-[10px] uppercase tracking-wider font-medium ${heroSavings >= 0 ? 'text-emerald-300/80' : 'text-rose-400/70'}`}>
                 {cfView === 'weekly' ? 'Last Week' : 'Last Month'}
@@ -991,7 +991,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {/* Top merchants */}
           <Card>
             <ChartLabel>Top Merchants</ChartLabel>
@@ -1005,8 +1005,8 @@ export function Dashboard() {
           </Card>
 
           {/* Recent transactions + Safe to spend */}
-          <Card className="col-span-2">
-            <div className="grid grid-cols-2 gap-5">
+          <Card className="sm:col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
                 <ChartLabel>Recent Transactions</ChartLabel>
                 <div className="space-y-2">
@@ -1133,7 +1133,7 @@ export function Dashboard() {
         </div>
 
         {/* Performance row below */}
-        <div className="grid grid-cols-3 gap-4 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
           <Card>
             <ChartLabel>Performance</ChartLabel>
             <div className="space-y-2.5">
@@ -1254,7 +1254,7 @@ export function Dashboard() {
           </Card>
 
           {/* Forecast — always visible on right */}
-          <div style={{ width: 380, minWidth: 380 }}>
+          <div className="w-full md:w-[380px] md:min-w-[380px]">
             <Card className="h-full">
               <ChartLabel>30-Day Forecast</ChartLabel>
               <ResponsiveContainer width="100%" height={CHART_HEIGHT.medium}>

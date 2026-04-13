@@ -36,7 +36,7 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="w-60 shrink-0 border-r border-[#2a2d3d] bg-[#0f1117] h-screen sticky top-0 p-4 flex flex-col gap-1 overflow-y-auto">
+    <aside className="hidden md:flex w-60 shrink-0 border-r border-[#2a2d3d] bg-[#0f1117] h-screen sticky top-0 p-4 flex-col gap-1 overflow-y-auto">
       <div className="flex items-center gap-2.5 px-3 py-2 mb-3">
         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center shadow-lg shadow-indigo-500/20">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -181,7 +181,7 @@ export function Sidebar() {
       {/* Upgrade confirmation modal — portal to escape sidebar stacking context */}
       {showUpgradeModal && createPortal(
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999]" onClick={() => setShowUpgradeModal(false)}>
-          <div className="bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl p-6 w-[400px] shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-semibold text-white mb-2">Switch to Full Mode?</h3>
             <p className="text-sm text-gray-400 mb-4">
               Full Mode uses paid Plaid API calls to fetch transaction history, investment holdings, and spending data.

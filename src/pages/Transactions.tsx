@@ -228,7 +228,7 @@ export function Transactions() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="Total Spent" value={totalSpent} color="#f43f5e" format="currency" />
         <StatCard label="Total Income" value={totalIncome} color="#10b981" format="currency" />
         <StatCard label="Net" value={totalIncome - totalSpent} color={totalIncome - totalSpent >= 0 ? '#10b981' : '#f43f5e'} format="currency" />
@@ -288,9 +288,9 @@ export function Transactions() {
 
       {/* Summary row — only when Overall (extra space) */}
       {splitBy === 'overall' && (
-        <div className="grid grid-cols-12 gap-4 animate-fade">
+        <div className="flex flex-col md:grid md:grid-cols-12 gap-4 animate-fade">
           {/* Top merchants — narrower */}
-          <Card className="col-span-3">
+          <Card className="md:col-span-3">
             <ChartLabel>Top Merchants</ChartLabel>
             {topMerchants.length > 0 ? (
               <div className="space-y-3">
@@ -302,7 +302,7 @@ export function Transactions() {
           </Card>
 
           {/* Category breakdown — wider, donut left + list right */}
-          <Card className="col-span-5">
+          <Card className="md:col-span-5">
             <ChartLabel>Category Breakdown</ChartLabel>
             <div className="flex gap-4">
               <div className="shrink-0" style={{ width: 180, height: 180 }}>
@@ -326,7 +326,7 @@ export function Transactions() {
           </Card>
 
           {/* Quick insights */}
-          <Card className="col-span-4">
+          <Card className="md:col-span-4">
             <ChartLabel>Quick Insights</ChartLabel>
             <div className="space-y-4">
               {insights.map((item, i) => (
@@ -377,7 +377,8 @@ export function Transactions() {
           ) : sorted.length === 0 ? (
             <p className="text-sm text-gray-600 p-8 text-center">No transactions found</p>
           ) : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[600px]">
               <thead>
                 <tr className="text-left text-gray-500 border-b border-[#2a2d3d] bg-[#252839]">
                   <th className="px-4 py-3 font-medium cursor-pointer hover:text-gray-300" onClick={() => toggleSort('date')}>
@@ -398,6 +399,7 @@ export function Transactions() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>
@@ -405,7 +407,7 @@ export function Transactions() {
       {/* Recategorize Modal */}
       {editingTxn && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setEditingTxn(null)}>
-          <div className="bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl p-6 w-[420px] shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-semibold text-white mb-1">Recategorize Transaction</h3>
             <p className="text-xs text-gray-500 mb-4">Change the category for this merchant</p>
 

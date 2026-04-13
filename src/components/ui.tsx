@@ -329,72 +329,90 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
   }
 
   // Side-by-side layout: donut left, legend right
-  if (showLegend) {
-    return (
-      <div className="flex gap-4 items-center" style={{ height }}>
-        {/* Donut — takes left side */}
-        <div className="relative shrink-0" style={{ width: height, height }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data} dataKey="value" nameKey="name"
-                cx="50%" cy="50%"
-                outerRadius={outerR} innerRadius={innerR}
-                strokeWidth={0} label={renderLabel} labelLine={false}
-                animationBegin={0} animationDuration={500}
-                activeIndex={-1} activeShape={undefined}
-              >
-                {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} cursor="pointer" />)}
-              </Pie>
-              <Tooltip
-                wrapperStyle={{ zIndex: 50, pointerEvents: 'none', transition: 'none' }}
-                allowEscapeViewBox={{ x: true, y: true }}
-                offset={15}
-                isAnimationActive={false}
-                content={({ active, payload }) => {
-                  if (!active || !payload?.length) return null
-                  const item = payload[0]
-                  const val = item.value as number
-                  const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0'
-                  return (
-                    <div style={{ ...chartTooltipStyle, zIndex: 50 }} className="p-3 rounded-xl shadow-xl">
-                      <p className="text-xs text-gray-300 font-medium">{formatCategoryName(String(item.name))}</p>
-                      <p className="text-sm text-white font-bold mt-1">{formatCurrency(val)}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{pct}% of {formatCurrency(total)}</p>
-                    </div>
-                  )
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-          {/* Center total */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-center">
-              <p className={`${centerFontSize} font-bold text-white`}>{formatCurrency(total)}</p>
-              {innerR >= 35 && <p className="text-[10px] text-gray-500 mt-0.5">{data.length} items</p>}
-            </div>
-          </div>
-        </div>
-
-        {/* Legend — scrollable right side, full names */}
-        <div className="flex-1 min-w-0 space-y-1.5 overflow-y-auto pr-1" style={{ maxHeight: height }}>
-          {data.map((item, i) => {
-            const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : '0'
-            return (
-              <div key={item.name} className="flex items-center justify-between text-xs py-1">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-2.5 h-2.5 rounded shrink-0" style={{ backgroundColor: getColor(item, i) }} />
-                  <span className="text-gray-300 truncate">{formatCategoryName(item.name)}</span>
+  // Shared pie + tooltip JSX (used in both legend and no-legend variants)
+  const pieContent = (chartHeight: number) => (
+    <div className="relative" style={{ height: chartHeight }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={data} dataKey="value" nameKey="name"
+            cx="50%" cy="50%"
+            outerRadius={outerR} innerRadius={innerR}
+            strokeWidth={0} label={renderLabel} labelLine={false}
+            animationBegin={0} animationDuration={500}
+            activeIndex={-1} activeShape={undefined}
+          >
+            {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} cursor="pointer" />)}
+          </Pie>
+          <Tooltip
+            wrapperStyle={{ zIndex: 50, pointerEvents: 'none', transition: 'none' }}
+            allowEscapeViewBox={{ x: true, y: true }}
+            offset={15}
+            isAnimationActive={false}
+            content={({ active, payload }) => {
+              if (!active || !payload?.length) return null
+              const item = payload[0]
+              const val = item.value as number
+              const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0'
+              return (
+                <div style={{ ...chartTooltipStyle, zIndex: 50 }} className="p-3 rounded-xl shadow-xl">
+                  <p className="text-xs text-gray-300 font-medium">{formatCategoryName(String(item.name))}</p>
+                  <p className="text-sm text-white font-bold mt-1">{formatCurrency(val)}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{pct}% of {formatCurrency(total)}</p>
                 </div>
-                <div className="flex items-center gap-2 shrink-0 ml-2">
-                  <span className="text-gray-500 w-10 text-right">{pct}%</span>
-                  <span className="text-gray-200 font-semibold w-20 text-right">{formatCurrency(item.value)}</span>
-                </div>
-              </div>
-            )
-          })}
+              )
+            }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+      {/* Center total */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="text-center">
+          <p className={`${centerFontSize} font-bold text-white`}>{formatCurrency(total)}</p>
+          {innerR >= 35 && <p className="text-[10px] text-gray-500 mt-0.5">{data.length} items</p>}
         </div>
       </div>
+    </div>
+  )
+
+  const legendContent = (maxH?: number) => (
+    <div className="space-y-1.5 overflow-y-auto pr-1" style={maxH ? { maxHeight: maxH } : undefined}>
+      {data.map((item, i) => {
+        const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : '0'
+        return (
+          <div key={item.name} className="flex items-center justify-between text-xs py-1">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-2.5 h-2.5 rounded shrink-0" style={{ backgroundColor: getColor(item, i) }} />
+              <span className="text-gray-300 truncate">{formatCategoryName(item.name)}</span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 ml-2">
+              <span className="text-gray-500 w-10 text-right">{pct}%</span>
+              <span className="text-gray-200 font-semibold w-20 text-right">{formatCurrency(item.value)}</span>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+
+  if (showLegend) {
+    return (
+      <>
+        {/* Mobile: vertical stack */}
+        <div className="sm:hidden">
+          {pieContent(Math.min(height, 220))}
+          <div className="mt-3">{legendContent(180)}</div>
+        </div>
+        {/* Desktop: side-by-side */}
+        <div className="hidden sm:flex gap-4 items-center" style={{ height }}>
+          <div className="shrink-0" style={{ width: height, height }}>
+            {pieContent(height)}
+          </div>
+          <div className="flex-1 min-w-0">
+            {legendContent(height)}
+          </div>
+        </div>
+      </>
     )
   }
 

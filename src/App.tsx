@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Sidebar } from './components/Sidebar'
+import { MobileNav } from './components/MobileNav'
 import { Dashboard } from './pages/Dashboard'
 import { Transactions } from './pages/Transactions'
 import { Accounts } from './pages/Accounts'
@@ -24,7 +25,7 @@ function App() {
         <Route path="*" element={
           <div className="flex min-h-screen bg-[#0f1117]">
             <Sidebar />
-            <main className="flex-1 overflow-auto">
+            <main className="flex-1 overflow-auto pb-16 md:pb-0">
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/wealth" element={<Wealth />} />
@@ -34,6 +35,7 @@ function App() {
                 <Route path="/analysis" element={<Analysis />} />
               </Routes>
             </main>
+            <MobileNav />
           </div>
         } />
       </Routes>

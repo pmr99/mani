@@ -62,7 +62,7 @@ function AccountDetail({ accountId }: { accountId: string }) {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
           label={isCredit ? 'Balance Owed' : isLoan ? 'Outstanding' : 'Balance'}
           value={account.current_balance ?? 0}
@@ -89,7 +89,7 @@ function AccountDetail({ accountId }: { accountId: string }) {
       {isInvestment && !isFree && (
         <>
           {acctHoldings.length > 0 ? (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
                 <ChartLabel>Holdings by Value</ChartLabel>
                 <DonutChart
@@ -133,7 +133,7 @@ function AccountDetail({ accountId }: { accountId: string }) {
 
       {/* Credit/Checking: spending breakdown */}
       {!isFree && (isCredit || account.type === 'depository') && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {categoryBreakdown.length > 0 && (
             <Card>
               <ChartLabel>Spending by Category</ChartLabel>
@@ -177,7 +177,7 @@ function AccountDetail({ accountId }: { accountId: string }) {
       {isLoan && (
         <Card>
           <ChartLabel>Loan Details</ChartLabel>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <p className="text-xs text-gray-500">Outstanding Balance</p>
               <p className="text-2xl font-bold text-rose-400 mt-1">{formatCurrency(account.current_balance ?? 0)}</p>
@@ -195,7 +195,8 @@ function AccountDetail({ accountId }: { accountId: string }) {
         <Card>
           <ChartLabel>Recent Transactions</ChartLabel>
           {acctTxns.length > 0 ? (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[500px]">
               <thead>
                 <tr className="text-left text-gray-500 border-b border-[#2a2d3d]">
                   <th className="pb-2 font-medium">Date</th>
@@ -211,6 +212,7 @@ function AccountDetail({ accountId }: { accountId: string }) {
                 ))}
               </tbody>
             </table>
+            </div>
           ) : (
             <p className="text-sm text-gray-600 py-4">No recent transactions</p>
           )}
