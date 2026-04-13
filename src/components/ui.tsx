@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { formatCurrency, getCategoryColor, formatCategoryName, CHART_COLORS } from '../lib/engines/utils'
+import { usePrivacy as usePrivacyHook } from '../hooks/usePrivacy'
 
 // ═══ Tooltip on hover ═══
 
@@ -143,6 +144,7 @@ interface StatCardProps {
 }
 
 export function StatCard({ label, value, color, change, format = 'compact' }: StatCardProps) {
+  const { mask } = usePrivacyHook()
   const formatted = format === 'compact'
     ? `$${Math.abs(value) >= 1000 ? (value / 1000).toFixed(1) + 'K' : value.toFixed(0)}`
     : formatCurrency(value)
@@ -151,10 +153,10 @@ export function StatCard({ label, value, color, change, format = 'compact' }: St
     <div className="bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl p-4 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-16 h-16 rounded-full opacity-10" style={{ backgroundColor: color, transform: 'translate(30%, -30%)' }} />
       <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">{label}</p>
-      <p className="text-xl font-bold text-white mt-1">{formatted}</p>
+      <p className="text-xl font-bold text-white mt-1">{mask(formatted)}</p>
       {change != null && (
         <p className={`text-xs mt-1 ${change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-          {change >= 0 ? '+' : ''}{formatCurrency(change)}
+          {change >= 0 ? '+' : ''}{mask(formatCurrency(change))}
         </p>
       )}
     </div>
@@ -300,6 +302,8 @@ interface DonutChartProps {
 }
 
 export function DonutChart({ data, height = 340, showLegend = true, colorMode = 'category', emptyMessage = 'No data' }: DonutChartProps) {
+  const { mask: pm } = usePrivacyHook()
+
   if (data.length === 0) return <p className="text-gray-600 text-sm py-12 text-center">{emptyMessage}</p>
 
   function getColor(item: DonutChartItem, index: number): string {
@@ -357,8 +361,8 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
               return (
                 <div style={{ ...chartTooltipStyle, zIndex: 50 }} className="p-3 rounded-xl shadow-xl">
                   <p className="text-xs text-gray-300 font-medium">{formatCategoryName(String(item.name))}</p>
-                  <p className="text-sm text-white font-bold mt-1">{formatCurrency(val)}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{pct}% of {formatCurrency(total)}</p>
+                  <p className="text-sm text-white font-bold mt-1">{pm(formatCurrency(val))}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{pct}% of {pm(formatCurrency(total))}</p>
                 </div>
               )
             }}
@@ -368,7 +372,7 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
       {/* Center total */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="text-center">
-          <p className={`${centerFontSize} font-bold text-white`}>{formatCurrency(total)}</p>
+          <p className={`${centerFontSize} font-bold text-white`}>{pm(formatCurrency(total))}</p>
           {innerR >= 35 && <p className="text-[10px] text-gray-500 mt-0.5">{data.length} items</p>}
         </div>
       </div>
@@ -387,7 +391,7 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
             </div>
             <div className="flex items-center gap-2 shrink-0 ml-2">
               <span className="text-gray-500 w-10 text-right">{pct}%</span>
-              <span className="text-gray-200 font-semibold w-20 text-right">{formatCurrency(item.value)}</span>
+              <span className="text-gray-200 font-semibold w-20 text-right">{pm(formatCurrency(item.value))}</span>
             </div>
           </div>
         )
@@ -444,8 +448,8 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
               return (
                 <div style={{ ...chartTooltipStyle, zIndex: 50 }} className="p-3 rounded-xl shadow-xl">
                   <p className="text-xs text-gray-300 font-medium">{formatCategoryName(String(item.name))}</p>
-                  <p className="text-sm text-white font-bold mt-1">{formatCurrency(val)}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{pct}% of {formatCurrency(total)}</p>
+                  <p className="text-sm text-white font-bold mt-1">{pm(formatCurrency(val))}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{pct}% of {pm(formatCurrency(total))}</p>
                 </div>
               )
             }}
@@ -454,7 +458,7 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
       </ResponsiveContainer>
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="text-center">
-          <p className={`${centerFontSize} font-bold text-white`}>{formatCurrency(total)}</p>
+          <p className={`${centerFontSize} font-bold text-white`}>{pm(formatCurrency(total))}</p>
           {innerR >= 35 && <p className="text-[10px] text-gray-500 mt-0.5">{data.length} items</p>}
         </div>
       </div>

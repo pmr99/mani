@@ -18,6 +18,7 @@ import { computeForecast } from '../lib/engines/forecasting'
 import { SyncButton } from '../components/SyncButton'
 import { useFreeMode } from '../hooks/useFreeMode'
 import { usePrivacy } from '../hooks/usePrivacy'
+// Privacy is provided via context from App.tsx — usePrivacy() reads it
 import {
   Card, ChartLabel, SectionTitle, StatCard, MerchantBar, TransactionRow,
   BreakdownList, CategoryBadge, DonutChart, chartTooltipStyle as tt, chartAxisProps as ax, chartLegendStyle, CHART_HEIGHT,
@@ -642,7 +643,18 @@ export function Dashboard() {
       <div className="hidden md:block">
         <div className="bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Overview</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Overview</p>
+              <button onClick={privacy.toggle} className="text-gray-600 hover:text-gray-400 transition-colors" title={privacy.revealed ? 'Hide amounts' : 'Show amounts'}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  {privacy.revealed ? (
+                    <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
+                  ) : (
+                    <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>
+                  )}
+                </svg>
+              </button>
+            </div>
             <div className="flex gap-0.5 bg-[#252839] p-0.5 rounded-lg">
               {PERIODS.map((p) => (
                 <button key={p.key} onClick={() => setPeriod(p.key)}
