@@ -22,7 +22,7 @@ export interface CsvParseResult {
 
 // Guess asset class from ticker symbol and description
 function guessAssetClass(symbol: string, description?: string): string {
-  if (!symbol || symbol === 'Cash' || symbol === 'SPAXX' || symbol === 'FDRXX' || symbol === 'FCASH')
+  if (!symbol || symbol === 'Cash' || symbol === 'SPAXX' || symbol === 'SWVXX' || symbol === 'FDRXX' || symbol === 'FCASH')
     return 'cash'
   const desc = (description || '').toUpperCase()
   if (desc.includes('MONEY MARKET') || desc.includes('HELD IN')) return 'cash'

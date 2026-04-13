@@ -139,10 +139,24 @@ export function Wealth() {
   )
   const totalAssets = assetAccounts.reduce((s, a) => s + a.value, 0)
 
+  // Known money market fund tickers held inside investment accounts
+  const MONEY_MARKET_TICKERS = new Set(['SPAXX', 'SWVXX', 'FDRXX', 'FCASH', 'VMFXX', 'SPRXX'])
+
   // Asset type distribution (Cash, Stocks, Retirement, IRA, MMF, etc.)
   const assetTypeDistribution = useMemo(() => {
     const items: { name: string; value: number; color: string }[] = []
     let cashTotal = 0, retirementTotal = 0, iraTotal = 0, brokerageTotal = 0, mmfTotal = 0, hsaTotal = 0, otherTotal = 0
+
+    // Pre-compute money-market value per investment account from holdings
+    const mmfByAccount = new Map<string, number>()
+    for (const h of holdings) {
+      const isMM =
+        h.asset_class === 'cash' ||
+        MONEY_MARKET_TICKERS.has((h.ticker_symbol || '').toUpperCase())
+      if (isMM && h.current_value > 0) {
+        mmfByAccount.set(h.account_id, (mmfByAccount.get(h.account_id) || 0) + h.current_value)
+      }
+    }
 
     for (const a of accounts) {
       if ((a.current_balance ?? 0) <= 0) continue
@@ -155,9 +169,18 @@ export function Wealth() {
         else if (sub === 'hsa' || name.includes('hsa')) hsaTotal += bal
         else cashTotal += bal
       } else if (a.type === 'investment') {
-        if (sub === '401k' || sub === '401a' || name.includes('401k') || name.includes('401(k)')) retirementTotal += bal
-        else if (sub === 'ira' || sub === 'roth' || name.includes('ira') || name.includes('roth')) iraTotal += bal
-        else brokerageTotal += bal
+        // Separate money-market holdings from this investment account
+        const mmfInAccount = mmfByAccount.get(a.id) || 0
+        const nonMmfBal = Math.max(0, bal - mmfInAccount)
+
+        if (sub === '401k' || sub === '401a' || name.includes('401k') || name.includes('401(k)')) {
+          retirementTotal += nonMmfBal
+        } else if (sub === 'ira' || sub === 'roth' || name.includes('ira') || name.includes('roth')) {
+          iraTotal += nonMmfBal
+        } else {
+          brokerageTotal += nonMmfBal
+        }
+        mmfTotal += mmfInAccount
       }
     }
 
@@ -169,7 +192,7 @@ export function Wealth() {
     if (brokerageTotal > 0) items.push({ name: 'Stocks / Brokerage', value: Math.round(brokerageTotal), color: '#f59e0b' })
     if (otherTotal > 0) items.push({ name: 'Other', value: Math.round(otherTotal), color: '#6b7280' })
     return items.sort((a, b) => b.value - a.value)
-  }, [accounts])
+  }, [accounts, holdings])
 
   // Liabilities
   // Warm palette for liabilities — reds/pinks for credit, ambers/oranges for loans
