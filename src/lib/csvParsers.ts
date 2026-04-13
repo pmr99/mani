@@ -15,12 +15,16 @@ export interface CsvParseResult {
   errors: string[]
 }
 
-// Guess asset class from ticker symbol
-function guessAssetClass(symbol: string): string {
+// Guess asset class from ticker symbol and description
+function guessAssetClass(symbol: string, description?: string): string {
   if (!symbol || symbol === 'Cash' || symbol === 'SPAXX' || symbol === 'FDRXX' || symbol === 'FCASH')
     return 'cash'
-  if (symbol.includes('**')) return 'cash' // Fidelity uses ** for pending cash
-  return 'stock' // Default — Fidelity doesn't distinguish ETF vs stock in CSV
+  const desc = (description || '').toUpperCase()
+  if (desc.includes('MONEY MARKET') || desc.includes('HELD IN')) return 'cash'
+  if (desc.includes('INDEX FUND') || desc.includes('MUTUAL FUND') || symbol.length === 5 && symbol.endsWith('X'))
+    return 'mutual_fund'
+  if (desc.includes('ETF')) return 'etf'
+  return 'stock'
 }
 
 // Strip dollar signs, commas, and whitespace from value strings
@@ -42,14 +46,24 @@ export function parseFidelityCsv(csvText: string): CsvParseResult {
   const errors: string[] = []
   let accountName: string | null = null
 
-  const { data, errors: parseErrors } = Papa.parse<Record<string, string>>(csvText, {
+  // Fidelity CSVs have trailing commas on every row and disclaimer text at the bottom.
+  // Strip trailing commas per line, and remove disclaimer lines (start with ")
+  const cleanedLines = csvText
+    .split('\n')
+    .filter((line) => !line.startsWith('"') && line.trim() !== '')
+    .map((line) => line.replace(/,\s*$/, ''))
+    .join('\n')
+
+  const { data, errors: parseErrors } = Papa.parse<Record<string, string>>(cleanedLines, {
     header: true,
     skipEmptyLines: true,
     transformHeader: (h) => h.trim(),
   })
 
+  // Only report non-field-count errors (trailing commas are already handled)
   if (parseErrors.length > 0) {
-    errors.push(...parseErrors.map((e) => `Row ${e.row}: ${e.message}`))
+    const real = parseErrors.filter((e) => e.type !== 'FieldMismatch')
+    errors.push(...real.map((e) => `Row ${e.row}: ${e.message}`))
   }
 
   const holdings: ParsedHolding[] = []
@@ -61,8 +75,15 @@ export function parseFidelityCsv(csvText: string): CsvParseResult {
     }
 
     // Get symbol — skip rows without one (totals/summary rows)
-    const symbol = (row['Symbol'] || '').trim()
+    let symbol = (row['Symbol'] || '').trim()
     if (!symbol || symbol === '' || symbol.toLowerCase() === 'symbol') continue
+
+    // Strip Fidelity's ** suffix (e.g. FCASH**, SPAXX**)
+    symbol = symbol.replace(/\*+$/, '')
+
+    // Track account name from Account Name column
+    const rowAcct = (row['Account Name'] || row['Account Name/Number'] || '').trim()
+    if (!accountName && rowAcct) accountName = rowAcct
 
     const description = (row['Description'] || row['Security Description'] || '').trim()
     const quantity = parseNumber(row['Quantity'])
@@ -78,7 +99,7 @@ export function parseFidelityCsv(csvText: string): CsvParseResult {
       quantity: quantity ?? 0,
       cost_basis: costBasis,
       current_value: currentValue ?? 0,
-      asset_class: guessAssetClass(symbol),
+      asset_class: guessAssetClass(symbol, description),
     })
   }
 
@@ -138,7 +159,7 @@ export function parseGenericCsv(csvText: string): CsvParseResult {
       quantity: quantity ?? 0,
       cost_basis: costBasis,
       current_value: currentValue ?? 0,
-      asset_class: guessAssetClass(symbol),
+      asset_class: guessAssetClass(symbol, description),
     })
   }
 
