@@ -309,13 +309,12 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
   }
 
   const total = data.reduce((s, d) => s + d.value, 0)
-  // Give 70% of height to chart, 30% to legend
-  const chartH = showLegend ? Math.floor(height * 0.65) : height
-  const outerR = Math.min(140, Math.floor(chartH * 0.45))
-  const innerR = Math.floor(outerR * 0.55)
-  const legendMaxVisible = 6
+  const outerR = Math.min(160, Math.floor(height * 0.44))
+  const innerR = Math.floor(outerR * 0.58)
+  // Scale center text so it never overflows the inner hole
+  const centerFontSize = innerR >= 50 ? 'text-lg' : innerR >= 35 ? 'text-sm' : 'text-xs'
 
-  // % labels on slices
+  // % labels on slices — only for large enough slices and charts
   const renderLabel = height <= 180 ? false : ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
     if (percent < 0.05) return null
     const RADIAN = Math.PI / 180
@@ -329,72 +328,61 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
     )
   }
 
-  return (
-    <div style={{ height }}>
-      {/* Chart with center total */}
-      <div className="relative">
-        <ResponsiveContainer width="100%" height={chartH}>
-          <PieChart>
-            <Pie
-              data={data}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={outerR}
-              innerRadius={innerR}
-              strokeWidth={0}
-              label={renderLabel}
-              labelLine={false}
-              animationBegin={0}
-              animationDuration={500}
-            >
-              {data.map((item, i) => (
-                <Cell key={i} fill={getColor(item, i)} />
-              ))}
-            </Pie>
-            <Tooltip
-              wrapperStyle={{ zIndex: 50 }}
-              content={({ active, payload }) => {
-                if (!active || !payload?.length) return null
-                const item = payload[0]
-                const val = item.value as number
-                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0'
-                return (
-                  <div style={{ ...chartTooltipStyle, zIndex: 50 }} className="p-3 rounded-xl shadow-xl">
-                    <p className="text-xs text-gray-300 font-medium">{formatCategoryName(String(item.name))}</p>
-                    <p className="text-sm text-white font-bold mt-1">{formatCurrency(val)}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{pct}% of {formatCurrency(total)}</p>
-                  </div>
-                )
-              }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-        {/* Center total */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ height: chartH }}>
-          <div className="text-center">
-            <p className={`${height <= 180 ? 'text-xs' : 'text-lg'} font-bold text-white`}>{formatCurrency(total)}</p>
-            {height > 180 && <p className="text-[10px] text-gray-500 mt-0.5">{data.length} items</p>}
+  // Side-by-side layout: donut left, legend right
+  if (showLegend) {
+    return (
+      <div className="flex gap-4 items-center" style={{ height }}>
+        {/* Donut — takes left side */}
+        <div className="relative shrink-0" style={{ width: height, height }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data} dataKey="value" nameKey="name"
+                cx="50%" cy="50%"
+                outerRadius={outerR} innerRadius={innerR}
+                strokeWidth={0} label={renderLabel} labelLine={false}
+                animationBegin={0} animationDuration={500}
+              >
+                {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} />)}
+              </Pie>
+              <Tooltip
+                wrapperStyle={{ zIndex: 50 }}
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null
+                  const item = payload[0]
+                  const val = item.value as number
+                  const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0'
+                  return (
+                    <div style={{ ...chartTooltipStyle, zIndex: 50 }} className="p-3 rounded-xl shadow-xl">
+                      <p className="text-xs text-gray-300 font-medium">{formatCategoryName(String(item.name))}</p>
+                      <p className="text-sm text-white font-bold mt-1">{formatCurrency(val)}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{pct}% of {formatCurrency(total)}</p>
+                    </div>
+                  )
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+          {/* Center total */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-center">
+              <p className={`${centerFontSize} font-bold text-white`}>{formatCurrency(total)}</p>
+              {innerR >= 35 && <p className="text-[10px] text-gray-500 mt-0.5">{data.length} items</p>}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Scrollable legend — shows 6, rest scrollable */}
-      {showLegend && (
-        <div
-          className="mt-3 space-y-2 overflow-y-auto pr-1"
-          style={{ maxHeight: height - chartH - 12 }}
-        >
+        {/* Legend — scrollable right side */}
+        <div className="flex-1 min-w-0 space-y-1.5 overflow-y-auto pr-1" style={{ maxHeight: height }}>
           {data.map((item, i) => {
             const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : '0'
             return (
-              <div key={item.name} className="flex items-center justify-between text-xs py-0.5">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-3 h-3 rounded shrink-0" style={{ backgroundColor: getColor(item, i) }} />
-                  <TruncatedText text={formatCategoryName(item.name)} maxLength={16} className="text-gray-300" />
+              <div key={item.name} className="flex items-center justify-between text-xs py-1">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-2.5 h-2.5 rounded shrink-0" style={{ backgroundColor: getColor(item, i) }} />
+                  <TruncatedText text={formatCategoryName(item.name)} maxLength={20} className="text-gray-300" />
                 </div>
-                <div className="flex items-center gap-2 shrink-0 ml-3">
+                <div className="flex items-center gap-2 shrink-0 ml-2">
                   <span className="text-gray-500 w-10 text-right">{pct}%</span>
                   <span className="text-gray-200 font-semibold w-20 text-right">{formatCurrency(item.value)}</span>
                 </div>
@@ -402,7 +390,48 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
             )
           })}
         </div>
-      )}
+      </div>
+    )
+  }
+
+  // No legend — chart only (full width)
+  return (
+    <div className="relative" style={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={data} dataKey="value" nameKey="name"
+            cx="50%" cy="50%"
+            outerRadius={outerR} innerRadius={innerR}
+            strokeWidth={0} label={renderLabel} labelLine={false}
+            animationBegin={0} animationDuration={500}
+          >
+            {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} />)}
+          </Pie>
+          <Tooltip
+            wrapperStyle={{ zIndex: 50 }}
+            content={({ active, payload }) => {
+              if (!active || !payload?.length) return null
+              const item = payload[0]
+              const val = item.value as number
+              const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0'
+              return (
+                <div style={{ ...chartTooltipStyle, zIndex: 50 }} className="p-3 rounded-xl shadow-xl">
+                  <p className="text-xs text-gray-300 font-medium">{formatCategoryName(String(item.name))}</p>
+                  <p className="text-sm text-white font-bold mt-1">{formatCurrency(val)}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{pct}% of {formatCurrency(total)}</p>
+                </div>
+              )
+            }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="text-center">
+          <p className={`${centerFontSize} font-bold text-white`}>{formatCurrency(total)}</p>
+          {innerR >= 35 && <p className="text-[10px] text-gray-500 mt-0.5">{data.length} items</p>}
+        </div>
+      </div>
     </div>
   )
 }
