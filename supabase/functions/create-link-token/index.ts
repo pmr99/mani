@@ -28,7 +28,6 @@ serve(async (req) => {
       user: { client_user_id: 'personal-user' },
       client_name: 'Mani',
       products: ['transactions'],
-      optional_products: ['investments'],
       required_if_supported_products: ['investments'],
       country_codes: ['US'],
       language: 'en',
