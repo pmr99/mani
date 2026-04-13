@@ -172,13 +172,23 @@ export function Wealth() {
   }, [accounts])
 
   // Liabilities
-  const liabilityAccounts = useMemo(() =>
-    accounts
+  // Warm palette for liabilities — reds/pinks for credit, ambers/oranges for loans
+  const LIABILITY_COLORS_CREDIT = ['#f43f5e', '#ec4899', '#e11d48', '#fb7185', '#be185d']
+  const LIABILITY_COLORS_LOAN = ['#f59e0b', '#f97316', '#d97706', '#ea580c', '#b45309']
+
+  const liabilityAccounts = useMemo(() => {
+    const items = accounts
       .filter((a) => (a.type === 'credit' || a.type === 'loan') && (a.current_balance ?? 0) > 0)
-      .map((a) => ({ name: a.name.replace('Plaid ', ''), value: a.current_balance ?? 0, type: a.type, color: a.type === 'credit' ? '#f43f5e' : '#f59e0b' }))
-      .sort((a, b) => b.value - a.value),
-    [accounts]
-  )
+      .map((a) => ({ name: a.name.replace('Plaid ', ''), value: a.current_balance ?? 0, type: a.type, color: '' }))
+      .sort((a, b) => b.value - a.value)
+    // Assign unique colors per type
+    let ci = 0, li = 0
+    for (const item of items) {
+      if (item.type === 'credit') { item.color = LIABILITY_COLORS_CREDIT[ci % LIABILITY_COLORS_CREDIT.length]; ci++ }
+      else { item.color = LIABILITY_COLORS_LOAN[li % LIABILITY_COLORS_LOAN.length]; li++ }
+    }
+    return items
+  }, [accounts])
   const totalLiabilities = liabilityAccounts.reduce((s, a) => s + a.value, 0)
 
   const allInsights = [...nw.insights, ...cashOpt.insights].slice(0, 3)
@@ -322,39 +332,10 @@ export function Wealth() {
         </h2>
         <Card>
           <ChartLabel>Distribution by Account</ChartLabel>
-          <div className="flex gap-6">
-            <div className="w-2/5 shrink-0">
-              <DonutChart
-                data={assetAccounts.map((a, i) => ({ name: a.name, value: a.value, color: CHART_COLORS[i % CHART_COLORS.length] }))}
-                height={CHART_HEIGHT.large} colorMode="custom" showLegend={false} emptyMessage="No assets"
-              />
-            </div>
-            <div className="flex-1 space-y-3 py-2 overflow-y-auto" style={{ maxHeight: CHART_HEIGHT.large }}>
-              {assetAccounts.map((a, i) => {
-                const pct = totalAssets > 0 ? (a.value / totalAssets) * 100 : 0
-                return (
-                  <div key={i}>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded shrink-0" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
-                        <span className="text-sm text-gray-300">{a.name}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#252839] text-gray-500">
-                          {a.type === 'investment' ? 'Investment' : 'Cash'}
-                        </span>
-                      </div>
-                      <div className="text-right shrink-0 ml-3">
-                        <span className="text-sm font-semibold text-white">{formatCurrency(a.value)}</span>
-                        <span className="text-[10px] text-gray-500 ml-2">{pct.toFixed(1)}%</span>
-                      </div>
-                    </div>
-                    <div className="w-full bg-[#252839] rounded-full h-1.5">
-                      <div className="h-1.5 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
+          <DonutChart
+            data={assetAccounts.map((a, i) => ({ name: a.name, value: a.value, color: CHART_COLORS[i % CHART_COLORS.length] }))}
+            height={CHART_HEIGHT.large} colorMode="custom" emptyMessage="No assets"
+          />
         </Card>
       </div>
 
@@ -412,17 +393,21 @@ export function Wealth() {
                 <p className="text-4xl font-bold text-rose-400 mt-1">{formatCurrency(totalLiabilities)}</p>
                 <p className="text-xs text-gray-500 mt-1">{liabilityAccounts.length} accounts · {liabilityAccounts.filter((a) => a.type === 'credit').length} credit cards · {liabilityAccounts.filter((a) => a.type === 'loan').length} loans</p>
               </div>
-              {/* Stacked bar showing credit vs loan proportion */}
-              <div className="w-48">
+              {/* Stacked bar with per-account colors */}
+              <div className="w-56">
                 <div className="flex h-4 rounded-full overflow-hidden">
                   {liabilityAccounts.map((a, i) => {
                     const pct = totalLiabilities > 0 ? (a.value / totalLiabilities) * 100 : 0
-                    return <div key={i} className="h-full" style={{ width: `${pct}%`, backgroundColor: a.color }} />
+                    return <div key={i} className="h-full" style={{ width: `${pct}%`, backgroundColor: a.color }} title={`${a.name}: ${pct.toFixed(0)}%`} />
                   })}
                 </div>
-                <div className="flex justify-between mt-1">
-                  <span className="text-[10px] text-rose-400">Credit</span>
-                  <span className="text-[10px] text-amber-400">Loans</span>
+                <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
+                  {liabilityAccounts.map((a, i) => (
+                    <div key={i} className="flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: a.color }} />
+                      <span className="text-[10px] text-gray-500 truncate max-w-[80px]">{a.name}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
