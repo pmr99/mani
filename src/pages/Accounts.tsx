@@ -3,7 +3,7 @@ import { useAccounts } from '../hooks/useAccounts'
 import { useTransactions } from '../hooks/useTransactions'
 import { useInvestments } from '../hooks/useInvestments'
 import { usePlaidLink } from '../hooks/usePlaidLink'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { formatCurrency, ACCOUNT_TYPE_CONFIG } from '../lib/engines/utils'
@@ -11,6 +11,7 @@ import {
   Card, ChartLabel, DonutChart, StatCard,
   TransactionRow, chartTooltipStyle as tt, chartAxisProps as ax, CHART_HEIGHT,
 } from '../components/ui'
+import { CsvImportModal } from '../components/CsvImportModal'
 
 // ─── Account Detail ───────────────────────────────────────────────────────────
 
@@ -231,6 +232,20 @@ function AccountList() {
 
   useEffect(() => { createLinkToken() }, [createLinkToken])
 
+  const [showMenu, setShowMenu] = useState(false)
+  const [showCsvModal, setShowCsvModal] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!showMenu) return
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowMenu(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showMenu])
+
   const filteredAccounts = typeFilter ? accounts.filter((a) => a.type === typeFilter) : accounts
 
   const grouped = useMemo(() => {
@@ -251,11 +266,46 @@ function AccountList() {
         <h1 className="text-2xl font-semibold text-white">
           {typeFilter ? ACCOUNT_TYPE_CONFIG[typeFilter]?.label || 'Accounts' : 'Accounts'}
         </h1>
-        <button onClick={() => open()} disabled={!ready || linkLoading}
-          className="px-4 py-2 text-sm bg-[#6366f1] text-white rounded-lg hover:bg-[#5558e6] disabled:opacity-50 transition-colors">
-          {linkLoading ? 'Loading...' : '+ Link Account'}
-        </button>
+
+        {/* + Link Account dropdown */}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            className="px-4 py-2 text-sm bg-[#6366f1] text-white rounded-lg hover:bg-[#5558e6] transition-colors flex items-center gap-1.5"
+          >
+            + Link Account
+            <span className="text-xs opacity-70">▾</span>
+          </button>
+
+          {showMenu && (
+            <div className="absolute right-0 mt-1.5 w-48 bg-[#1a1d29] border border-[#2a2d3d] rounded-lg shadow-xl overflow-hidden z-50">
+              <button
+                onClick={() => { setShowMenu(false); open() }}
+                disabled={!ready || linkLoading}
+                className="w-full px-4 py-2.5 text-sm text-left text-gray-200 hover:bg-[#252839] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <span className="block font-medium">Link via Plaid</span>
+                <span className="block text-xs text-gray-500">Banks, credit cards</span>
+              </button>
+              <div className="border-t border-[#2a2d3d]" />
+              <button
+                onClick={() => { setShowMenu(false); setShowCsvModal(true) }}
+                className="w-full px-4 py-2.5 text-sm text-left text-gray-200 hover:bg-[#252839] transition-colors"
+              >
+                <span className="block font-medium">Import CSV</span>
+                <span className="block text-xs text-gray-500">Fidelity, Schwab, etc.</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
+
+      {showCsvModal && (
+        <CsvImportModal
+          onClose={() => setShowCsvModal(false)}
+          onSuccess={() => { refetch(); setShowCsvModal(false) }}
+        />
+      )}
 
       {loading ? (
         <p className="text-sm text-gray-500">Loading accounts...</p>
