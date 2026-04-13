@@ -342,13 +342,15 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
                 outerRadius={outerR} innerRadius={innerR}
                 strokeWidth={0} label={renderLabel} labelLine={false}
                 animationBegin={0} animationDuration={500}
+                activeIndex={-1} activeShape={undefined}
               >
-                {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} />)}
+                {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} cursor="pointer" />)}
               </Pie>
               <Tooltip
-                wrapperStyle={{ zIndex: 50, pointerEvents: 'none' }}
+                wrapperStyle={{ zIndex: 50, pointerEvents: 'none', transition: 'none' }}
                 allowEscapeViewBox={{ x: true, y: true }}
                 offset={15}
+                isAnimationActive={false}
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null
                   const item = payload[0]
@@ -407,13 +409,15 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
             outerRadius={outerR} innerRadius={innerR}
             strokeWidth={0} label={renderLabel} labelLine={false}
             animationBegin={0} animationDuration={500}
+            activeIndex={-1} activeShape={undefined}
           >
-            {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} />)}
+            {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} cursor="pointer" />)}
           </Pie>
           <Tooltip
-            wrapperStyle={{ zIndex: 50, pointerEvents: 'none' }}
+            wrapperStyle={{ zIndex: 50, pointerEvents: 'none', transition: 'none' }}
             allowEscapeViewBox={{ x: true, y: true }}
             offset={15}
+            isAnimationActive={false}
             content={({ active, payload }) => {
               if (!active || !payload?.length) return null
               const item = payload[0]
