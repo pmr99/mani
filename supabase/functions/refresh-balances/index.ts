@@ -42,6 +42,9 @@ serve(async (req) => {
     let totalAccounts = 0
 
     for (const item of items) {
+      // Skip CSV-imported items — they don't have a real Plaid access token
+      if (item.access_token === 'csv-import') continue
+
       // /accounts/get is FREE — does not count against any product cap
       const res = await fetch(`${baseUrl}/accounts/get`, {
         method: 'POST',
