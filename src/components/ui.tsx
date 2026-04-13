@@ -346,7 +346,9 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
                 {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} />)}
               </Pie>
               <Tooltip
-                wrapperStyle={{ zIndex: 50 }}
+                wrapperStyle={{ zIndex: 50, pointerEvents: 'none' }}
+                allowEscapeViewBox={{ x: true, y: true }}
+                offset={15}
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null
                   const item = payload[0]
@@ -372,7 +374,7 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
           </div>
         </div>
 
-        {/* Legend — scrollable right side */}
+        {/* Legend — scrollable right side, full names */}
         <div className="flex-1 min-w-0 space-y-1.5 overflow-y-auto pr-1" style={{ maxHeight: height }}>
           {data.map((item, i) => {
             const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : '0'
@@ -380,7 +382,7 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
               <div key={item.name} className="flex items-center justify-between text-xs py-1">
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="w-2.5 h-2.5 rounded shrink-0" style={{ backgroundColor: getColor(item, i) }} />
-                  <TruncatedText text={formatCategoryName(item.name)} maxLength={20} className="text-gray-300" />
+                  <span className="text-gray-300 truncate">{formatCategoryName(item.name)}</span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-2">
                   <span className="text-gray-500 w-10 text-right">{pct}%</span>
@@ -409,7 +411,9 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
             {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} />)}
           </Pie>
           <Tooltip
-            wrapperStyle={{ zIndex: 50 }}
+            wrapperStyle={{ zIndex: 50, pointerEvents: 'none' }}
+            allowEscapeViewBox={{ x: true, y: true }}
+            offset={15}
             content={({ active, payload }) => {
               if (!active || !payload?.length) return null
               const item = payload[0]
