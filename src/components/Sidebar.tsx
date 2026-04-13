@@ -15,7 +15,7 @@ const links = [
 
 const TYPE_ORDER = ['credit', 'depository', 'investment', 'loan']
 
-export function Sidebar() {
+export function Sidebar({ signOut }: { signOut: () => void }) {
   const { accounts } = useAccounts()
   const navigate = useNavigate()
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
@@ -176,6 +176,12 @@ export function Sidebar() {
             {freeMode.isFree ? 'Balances only · $0/mo' : freeMode.hasPaidData ? 'All features · already active' : 'All features · ~$3/mo'}
           </p>
         </div>
+        <button
+          onClick={signOut}
+          className="w-full px-3 py-2 text-xs text-gray-500 hover:text-gray-300 hover:bg-[#1a1d29] rounded-lg transition-colors text-left"
+        >
+          Sign out
+        </button>
       </div>
 
       {/* Upgrade confirmation modal — portal to escape sidebar stacking context */}

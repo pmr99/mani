@@ -21,14 +21,9 @@ const tabs = [
       <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
     </svg>
   )},
-  { to: '/analysis', label: 'Insights', icon: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21.21 15.89A10 10 0 1 1 8 2.83" /><path d="M22 12A10 10 0 0 0 12 2v10z" />
-    </svg>
-  )},
 ]
 
-export function MobileNav() {
+export function MobileNav({ signOut }: { signOut: () => void }) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0f1117] border-t border-[#2a2d3d] md:hidden">
       <div className="flex items-center justify-around h-14 px-1">
@@ -47,6 +42,16 @@ export function MobileNav() {
             <span className="text-[10px] font-medium">{tab.label}</span>
           </NavLink>
         ))}
+        {/* Sign out */}
+        <button
+          onClick={signOut}
+          className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-gray-500 transition-colors"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          <span className="text-[10px] font-medium">Out</span>
+        </button>
       </div>
     </nav>
   )

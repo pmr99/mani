@@ -7,8 +7,27 @@ import { Accounts } from './pages/Accounts'
 import { Analysis } from './pages/Analysis'
 import { Wealth } from './pages/Wealth'
 import { OAuthReturn } from './pages/OAuthReturn'
+import { Login } from './pages/Login'
+import { useAuth } from './hooks/useAuth'
 
 function App() {
+  const { session, loading, signOut } = useAuth()
+
+  // Loading state while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0f1117] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#6366f1] border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  // Not logged in → show login
+  if (!session) {
+    return <Login />
+  }
+
+  // Authenticated → show app
   return (
     <BrowserRouter>
       <Routes>
@@ -24,7 +43,7 @@ function App() {
         {/* Main app layout */}
         <Route path="*" element={
           <div className="flex min-h-screen bg-[#0f1117]">
-            <Sidebar />
+            <Sidebar signOut={signOut} />
             <main className="flex-1 overflow-auto pb-16 md:pb-0">
               <Routes>
                 <Route path="/" element={<Dashboard />} />
@@ -35,7 +54,7 @@ function App() {
                 <Route path="/analysis" element={<Analysis />} />
               </Routes>
             </main>
-            <MobileNav />
+            <MobileNav signOut={signOut} />
           </div>
         } />
       </Routes>
