@@ -28,33 +28,33 @@ export function Accounts() {
 
   const { holdings } = useInvestments()
 
+  // Derived data for single account view — hooks must be at top level, never inside conditionals
+  const account = accounts.find((a) => a.id === accountId)
+  const acctTxns = useMemo(() => transactions.filter((t) => t.account_id === accountId), [transactions, accountId])
+  const acctHoldings = useMemo(() => holdings.filter((h) => h.account_id === accountId), [holdings, accountId])
+
+  const categoryBreakdown = useMemo(() => {
+    const map = new Map<string, number>()
+    acctTxns.filter((t) => t.amount > 0).forEach((t) => {
+      const cat = t.category || 'OTHER'
+      map.set(cat, (map.get(cat) || 0) + t.amount)
+    })
+    return Array.from(map, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 8)
+  }, [acctTxns])
+
+  const monthlySpending = useMemo(() => {
+    const map = new Map<string, number>()
+    acctTxns.filter((t) => t.amount > 0).forEach((t) => {
+      const mk = t.date.substring(0, 7)
+      map.set(mk, (map.get(mk) || 0) + t.amount)
+    })
+    return [...map.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([mk, v]) => ({ month: new Date(mk + '-01').toLocaleDateString('en-US', { month: 'short' }), spent: Math.round(v) }))
+  }, [acctTxns])
+
   // Single account detail view
   if (accountId) {
-    const account = accounts.find((a) => a.id === accountId)
-    const acctTxns = transactions.filter((t) => t.account_id === accountId)
-    const acctHoldings = holdings.filter((h) => h.account_id === accountId)
-
-    const categoryBreakdown = useMemo(() => {
-      const map = new Map<string, number>()
-      acctTxns.filter((t) => t.amount > 0).forEach((t) => {
-        const cat = t.category || 'OTHER'
-        map.set(cat, (map.get(cat) || 0) + t.amount)
-      })
-      return Array.from(map, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 8)
-    }, [acctTxns])
-
-    // Monthly spending for this account
-    const monthlySpending = useMemo(() => {
-      const map = new Map<string, number>()
-      acctTxns.filter((t) => t.amount > 0).forEach((t) => {
-        const mk = t.date.substring(0, 7)
-        map.set(mk, (map.get(mk) || 0) + t.amount)
-      })
-      return [...map.entries()]
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([mk, v]) => ({ month: new Date(mk + '-01').toLocaleDateString('en-US', { month: 'short' }), spent: Math.round(v) }))
-    }, [acctTxns])
-
     if (!account) return <div className="p-6"><p className="text-gray-500">Account not found</p></div>
 
     const config = ACCOUNT_TYPE_CONFIG[account.type]
