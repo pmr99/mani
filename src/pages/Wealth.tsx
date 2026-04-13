@@ -15,6 +15,7 @@ import { computeCashOptimization } from '../lib/engines/cash-optimization'
 import { computeInvestmentPortfolio } from '../lib/engines/investment-portfolio'
 // Goal tracking removed
 import { formatCurrency, currentMonthKey, CHART_COLORS, addDays, todayStr } from '../lib/engines/utils'
+import { usePrivacy } from '../hooks/usePrivacy'
 import {
   Card, ChartLabel, DonutChart, chartTooltipStyle as tt, chartAxisProps as ax,
   chartLegendStyle, CHART_HEIGHT,
@@ -31,6 +32,7 @@ const RANGE_OPTIONS = [
 // Budgets & Goals removed from this page
 
 export function Wealth() {
+  const { mask: pm } = usePrivacy()
   const [rangeDays, setRangeDays] = useState(90)
   const [nwView, setNwView] = useState<'overall' | 'inout'>('overall')
 
@@ -226,9 +228,9 @@ export function Wealth() {
           {/* Left: Net Worth */}
           <div>
             <p className="text-sm text-gray-400">Net worth</p>
-            <p className="text-4xl font-bold text-white mt-1">{formatCurrency(nw.netWorth)}</p>
+            <p className="text-4xl font-bold text-white mt-1">{pm(formatCurrency(nw.netWorth))}</p>
             <span className={`text-sm font-medium ${nw.monthlyChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-              {nw.monthlyChange >= 0 ? '+' : ''}{formatCurrency(nw.monthlyChange)}
+              {nw.monthlyChange >= 0 ? '+' : ''}{pm(formatCurrency(nw.monthlyChange))}
               {nw.monthlyChangePercent !== 0 && ` (${nw.monthlyChangePercent > 0 ? '+' : ''}${nw.monthlyChangePercent}%)`}
               {' '}this month
             </span>
@@ -238,30 +240,30 @@ export function Wealth() {
           <div className="flex gap-6">
             <div className="sm:text-right">
               <p className="text-[10px] text-gray-500 uppercase tracking-wider">Assets</p>
-              <p className="text-2xl font-bold text-emerald-400 mt-1">{formatCurrency(nw.totalAssets)}</p>
+              <p className="text-2xl font-bold text-emerald-400 mt-1">{pm(formatCurrency(nw.totalAssets))}</p>
               <div className="flex items-center gap-2 mt-1 justify-end">
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  <span className="text-[10px] text-gray-500">Cash {formatCurrency(nw.cashBalance)}</span>
+                  <span className="text-[10px] text-gray-500">Cash {pm(formatCurrency(nw.cashBalance))}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-purple-500" />
-                  <span className="text-[10px] text-gray-500">Invest {formatCurrency(nw.investmentBalance)}</span>
+                  <span className="text-[10px] text-gray-500">Invest {pm(formatCurrency(nw.investmentBalance))}</span>
                 </div>
               </div>
             </div>
             <div className="w-px bg-[#2a2d3d]" />
             <div className="text-right">
               <p className="text-[10px] text-gray-500 uppercase tracking-wider">Liabilities</p>
-              <p className="text-2xl font-bold text-rose-400 mt-1">{formatCurrency(nw.totalLiabilities)}</p>
+              <p className="text-2xl font-bold text-rose-400 mt-1">{pm(formatCurrency(nw.totalLiabilities))}</p>
               <div className="flex items-center gap-2 mt-1 justify-end">
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-rose-500" />
-                  <span className="text-[10px] text-gray-500">Credit {formatCurrency(nw.creditBalance)}</span>
+                  <span className="text-[10px] text-gray-500">Credit {pm(formatCurrency(nw.creditBalance))}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-amber-500" />
-                  <span className="text-[10px] text-gray-500">Loans {formatCurrency(nw.loanBalance)}</span>
+                  <span className="text-[10px] text-gray-500">Loans {pm(formatCurrency(nw.loanBalance))}</span>
                 </div>
               </div>
             </div>
@@ -329,16 +331,16 @@ export function Wealth() {
             <div className="space-y-1">
               <div className="flex justify-between gap-6 text-xs">
                 <span className="text-gray-500">Start</span>
-                <span className="text-gray-300">{formatCurrency(nwSelection.startVal)}</span>
+                <span className="text-gray-300">{pm(formatCurrency(nwSelection.startVal))}</span>
               </div>
               <div className="flex justify-between gap-6 text-xs">
                 <span className="text-gray-500">End</span>
-                <span className="text-gray-300">{formatCurrency(nwSelection.endVal)}</span>
+                <span className="text-gray-300">{pm(formatCurrency(nwSelection.endVal))}</span>
               </div>
               <div className="border-t border-[#2a2d3d] pt-1.5 flex justify-between gap-6 text-xs">
                 <span className={nwSelection.diff >= 0 ? 'text-emerald-400' : 'text-rose-400'}>Change</span>
                 <span className={`font-bold ${nwSelection.diff >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {nwSelection.diff >= 0 ? '+' : ''}{formatCurrency(nwSelection.diff)} ({nwSelection.pct >= 0 ? '+' : ''}{nwSelection.pct.toFixed(1)}%)
+                  {nwSelection.diff >= 0 ? '+' : ''}{pm(formatCurrency(nwSelection.diff))} ({nwSelection.pct >= 0 ? '+' : ''}{nwSelection.pct.toFixed(1)}%)
                 </span>
               </div>
             </div>
@@ -351,7 +353,7 @@ export function Wealth() {
         <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
           <span className="w-1.5 h-5 rounded-full bg-blue-500" />
           Assets
-          <span className="text-sm font-normal text-emerald-400 ml-2">{formatCurrency(totalAssets)}</span>
+          <span className="text-sm font-normal text-emerald-400 ml-2">{pm(formatCurrency(totalAssets))}</span>
         </h2>
         <Card>
           <ChartLabel>Distribution by Account</ChartLabel>
@@ -374,7 +376,7 @@ export function Wealth() {
                 key={item.name}
                 className="h-full relative group transition-all hover:opacity-80"
                 style={{ width: `${pct}%`, backgroundColor: item.color }}
-                title={`${item.name}: ${formatCurrency(item.value)} (${pct.toFixed(1)}%)`}
+                title={`${item.name}: ${pm(formatCurrency(item.value))} (${pct.toFixed(1)}%)`}
               />
             ) : null
           })}
@@ -390,7 +392,7 @@ export function Wealth() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs text-gray-400 truncate">{item.name}</p>
-                  <p className="text-sm font-semibold text-white">{formatCurrency(item.value)}</p>
+                  <p className="text-sm font-semibold text-white">{pm(formatCurrency(item.value))}</p>
                 </div>
               </div>
             )
@@ -403,7 +405,7 @@ export function Wealth() {
         <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
           <span className="w-1.5 h-5 rounded-full bg-rose-500" />
           Liabilities
-          <span className="text-sm font-normal text-rose-400 ml-2">{formatCurrency(totalLiabilities)}</span>
+          <span className="text-sm font-normal text-rose-400 ml-2">{pm(formatCurrency(totalLiabilities))}</span>
         </h2>
         {liabilityAccounts.length === 0 ? (
           <Card><p className="text-gray-600 text-sm py-8 text-center">No liabilities</p></Card>
@@ -413,7 +415,7 @@ export function Wealth() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <p className="text-sm text-gray-400">Total Outstanding</p>
-                <p className="text-4xl font-bold text-rose-400 mt-1">{formatCurrency(totalLiabilities)}</p>
+                <p className="text-4xl font-bold text-rose-400 mt-1">{pm(formatCurrency(totalLiabilities))}</p>
                 <p className="text-xs text-gray-500 mt-1">{liabilityAccounts.length} accounts · {liabilityAccounts.filter((a) => a.type === 'credit').length} credit cards · {liabilityAccounts.filter((a) => a.type === 'loan').length} loans</p>
               </div>
               {/* Stacked bar with per-account colors */}
@@ -449,7 +451,7 @@ export function Wealth() {
                     </span>
                   </div>
                   <p className="text-sm text-gray-300 mb-1">{a.name}</p>
-                  <p className="text-2xl font-bold" style={{ color: a.color }}>{formatCurrency(a.value)}</p>
+                  <p className="text-2xl font-bold" style={{ color: a.color }}>{pm(formatCurrency(a.value))}</p>
                   <div className="flex items-center gap-2 mt-2">
                     <div className="flex-1 bg-[#252839] rounded-full h-1.5">
                       <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, backgroundColor: a.color }} />

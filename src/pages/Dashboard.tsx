@@ -598,7 +598,10 @@ export function Dashboard() {
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl md:text-2xl font-bold text-white">Dashboard</h1>
+        <div>
+          <p className="text-sm text-gray-500">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+          <h1 className="text-xl md:text-2xl font-bold text-white">Welcome, <span className="bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] bg-clip-text text-transparent">Lorddeep</span></h1>
+        </div>
         {portfolioSyncing && <span className="text-xs text-purple-400 animate-pulse">Syncing investments...</span>}
       </div>
 
