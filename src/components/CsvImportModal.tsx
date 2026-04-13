@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { supabase } from '../lib/supabase'
-import { parseFidelityCsv, parseGenericCsv, type CsvParseResult } from '../lib/csvParsers'
+import { parseFidelityCsv, parseSchwabCsv, parseGenericCsv, type CsvParseResult } from '../lib/csvParsers'
 import { formatCurrency } from '../lib/engines/utils'
 
 interface CsvImportModalProps {
@@ -12,7 +12,7 @@ interface CsvImportModalProps {
 export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
   const [step, setStep] = useState<'upload' | 'preview' | 'importing' | 'done'>('upload')
   const [institutionName, setInstitutionName] = useState('Fidelity')
-  const [format, setFormat] = useState<'fidelity' | 'generic'>('fidelity')
+  const [format, setFormat] = useState<'fidelity' | 'schwab' | 'generic'>('fidelity')
   const [parseResult, setParseResult] = useState<CsvParseResult | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState(false)
@@ -22,7 +22,9 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
     const reader = new FileReader()
     reader.onload = (e) => {
       const text = e.target?.result as string
-      const result = format === 'fidelity' ? parseFidelityCsv(text) : parseGenericCsv(text)
+      const result = format === 'fidelity' ? parseFidelityCsv(text)
+        : format === 'schwab' ? parseSchwabCsv(text)
+        : parseGenericCsv(text)
       setParseResult(result)
       setStep('preview')
     }
@@ -127,17 +129,17 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
               <div>
                 <label className="text-xs text-gray-400 block mb-1.5">CSV Format</label>
                 <div className="flex gap-2">
-                  {(['fidelity', 'generic'] as const).map((f) => (
+                  {([['fidelity', 'Fidelity'], ['schwab', 'Schwab'], ['generic', 'Other']] as const).map(([f, label]) => (
                     <button
                       key={f}
-                      onClick={() => setFormat(f)}
+                      onClick={() => { setFormat(f); if (f !== 'generic') setInstitutionName(label as string) }}
                       className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
                         format === f
                           ? 'border-[#6366f1] bg-[#6366f1]/10 text-[#818cf8]'
                           : 'border-[#2a2d3d] text-gray-400 hover:border-gray-500'
                       }`}
                     >
-                      {f === 'fidelity' ? 'Fidelity' : 'Other (auto-detect)'}
+                      {label}
                     </button>
                   ))}
                 </div>
@@ -171,6 +173,8 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
                 <p className="text-gray-600 text-xs mt-2">
                   {format === 'fidelity'
                     ? 'Export from Fidelity: Portfolio → Positions → Download'
+                    : format === 'schwab'
+                    ? 'Export from Schwab: Accounts → Positions → Export → CSV'
                     : 'Any CSV with Symbol, Quantity, and Value columns'}
                 </p>
                 <input

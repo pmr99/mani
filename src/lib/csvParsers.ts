@@ -104,6 +104,90 @@ export function parseFidelityCsv(csvText: string): CsvParseResult {
   return { accounts, errors }
 }
 
+// ─── Schwab Positions CSV ────────────────────────────────────────────────────
+// Exported from: Schwab.com → Accounts → Positions → Export → CSV
+// Has a title row on line 1 ("Positions for account..."), empty line 2, then headers on line 3.
+// All values are quoted. Column names include parenthetical aliases like "Qty (Quantity)".
+
+export function parseSchwabCsv(csvText: string): CsvParseResult {
+  const errors: string[] = []
+
+  // Find the actual header row — skip title lines until we find one with "Symbol"
+  const lines = csvText.split(/\r?\n/)
+  let headerIdx = -1
+  for (let i = 0; i < Math.min(lines.length, 10); i++) {
+    if (lines[i].includes('"Symbol"') || lines[i].includes('Symbol')) {
+      headerIdx = i
+      break
+    }
+  }
+
+  if (headerIdx === -1) {
+    return { accounts: [], errors: ['Could not find header row with "Symbol" column. Is this a Schwab Positions export?'] }
+  }
+
+  // Extract account name from the title row
+  let accountName = 'Schwab'
+  const titleMatch = lines[0]?.match(/Positions for account\s+(.+?)\s+as of/i)
+  if (titleMatch) accountName = titleMatch[1].replace(/["\.]+$/g, '').trim()
+
+  // Parse from header row onward
+  const csvFromHeader = lines.slice(headerIdx).join('\n')
+  const { data, errors: parseErrors } = Papa.parse<Record<string, string>>(csvFromHeader, {
+    header: true,
+    skipEmptyLines: 'greedy',
+    transformHeader: (h) => h.replace(/"/g, '').trim(),
+  })
+
+  if (parseErrors.length > 0) {
+    const real = parseErrors.filter((e) => e.type !== 'FieldMismatch')
+    errors.push(...real.map((e) => `Row ${e.row}: ${e.message}`))
+  }
+
+  const holdings: ParsedHolding[] = []
+
+  for (const row of data) {
+    const symbol = (row['Symbol'] || '').replace(/"/g, '').trim()
+    // Skip summary rows, cash placeholders without symbols, and empty rows
+    if (!symbol || symbol === 'Positions Total' || symbol === 'Account Total') continue
+
+    const description = (row['Description'] || '').replace(/"/g, '').trim()
+    const qtyStr = (row['Qty (Quantity)'] || row['Quantity'] || row['Qty'] || '').replace(/"/g, '').trim()
+    const valueStr = (row['Mkt Val (Market Value)'] || row['Market Value'] || row['Mkt Val'] || '').replace(/"/g, '').trim()
+    const costStr = (row['Cost Basis'] || '').replace(/"/g, '').trim()
+    const assetType = (row['Asset Type'] || '').replace(/"/g, '').trim().toLowerCase()
+
+    const quantity = parseNumber(qtyStr)
+    const currentValue = parseNumber(valueStr)
+    const costBasis = parseNumber(costStr)
+
+    if (currentValue === null && quantity === null) continue
+
+    // Determine asset class from Schwab's "Asset Type" column
+    let asset_class = 'stock'
+    if (assetType.includes('cash') || assetType.includes('money market') || symbol === 'Cash & Cash Investments') asset_class = 'cash'
+    else if (assetType.includes('mutual fund')) asset_class = 'mutual_fund'
+    else if (assetType.includes('etf')) asset_class = 'etf'
+    else if (assetType.includes('bond') || assetType.includes('fixed income')) asset_class = 'bond'
+
+    holdings.push({
+      ticker_symbol: symbol === 'Cash & Cash Investments' ? 'CASH' : symbol,
+      security_name: description || symbol,
+      quantity: quantity ?? 0,
+      cost_basis: costBasis,
+      current_value: currentValue ?? 0,
+      asset_class,
+    })
+  }
+
+  if (holdings.length === 0) {
+    errors.push('No holdings found. Make sure you exported Positions (not History) from Schwab.')
+  }
+
+  const totalValue = holdings.reduce((s, h) => s + h.current_value, 0)
+  return { accounts: [{ name: accountName, holdings, totalValue }], errors }
+}
+
 // ─── Generic CSV (fallback) ──────────────────────────────────────────────────
 
 const SYMBOL_COLS = ['Symbol', 'Ticker', 'Ticker Symbol', 'symbol', 'ticker']
