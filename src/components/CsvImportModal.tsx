@@ -172,6 +172,30 @@ export function CsvImportModal({ onClose, onSuccess }: CsvImportModalProps) {
         if (holdErr) throw new Error(`Failed to import holdings for "${acct.name}": ${holdErr.message}`)
       }
 
+      // Update today's net worth snapshot to match current account balances
+      const { data: allAccts } = await supabase.from('accounts').select('type, current_balance')
+      if (allAccts && allAccts.length > 0) {
+        let cash = 0, invest = 0, credit = 0, loan = 0
+        for (const a of allAccts) {
+          const bal = a.current_balance || 0
+          if (a.type === 'depository') cash += bal
+          else if (a.type === 'investment') invest += bal
+          else if (a.type === 'credit') credit += bal
+          else if (a.type === 'loan') loan += bal
+        }
+        const today = new Date().toISOString().split('T')[0]
+        await supabase.from('net_worth_snapshots').upsert({
+          snapshot_date: today,
+          total_assets: cash + invest,
+          total_liabilities: credit + loan,
+          net_worth: (cash + invest) - (credit + loan),
+          cash_balance: cash,
+          investment_balance: invest,
+          credit_balance: credit,
+          loan_balance: loan,
+        }, { onConflict: 'snapshot_date' })
+      }
+
       setStep('done')
       onSuccess()
     } catch (err) {

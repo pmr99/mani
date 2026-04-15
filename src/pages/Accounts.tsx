@@ -12,14 +12,52 @@ import {
   TransactionRow, chartTooltipStyle as tt, chartAxisProps as ax, CHART_HEIGHT,
 } from '../components/ui'
 import { CsvImportModal } from '../components/CsvImportModal'
+import { supabase } from '../lib/supabase'
 
 // ─── Account Detail ───────────────────────────────────────────────────────────
 
 function AccountDetail({ accountId }: { accountId: string }) {
   const { isFree } = useFreeMode()
-  const { accounts } = useAccounts()
+  const { accounts, refetch: refetchAccounts } = useAccounts()
   const { transactions } = useTransactions({ months: 1 })
   const { holdings } = useInvestments()
+  const navigate = useNavigate()
+
+  const handleDelete = async () => {
+    if (!account) return
+    const confirmed = confirm(`Delete "${account.name}"?\n\nThis removes the account and all its holdings/transactions from Mani. This does NOT affect your actual bank account.`)
+    if (!confirmed) return
+
+    // Delete holdings, then account (cascades)
+    await supabase.from('investment_holdings').delete().eq('account_id', accountId)
+    await supabase.from('transactions').delete().eq('account_id', accountId)
+    await supabase.from('accounts').delete().eq('id', accountId)
+
+    // Refresh today's net worth snapshot
+    const { data: allAccts } = await supabase.from('accounts').select('type, current_balance')
+    if (allAccts) {
+      let cash = 0, invest = 0, credit = 0, loan = 0
+      for (const a of allAccts) {
+        const bal = a.current_balance || 0
+        if (a.type === 'depository') cash += bal
+        else if (a.type === 'investment') invest += bal
+        else if (a.type === 'credit') credit += bal
+        else if (a.type === 'loan') loan += bal
+      }
+      const today = new Date().toISOString().split('T')[0]
+      await supabase.from('net_worth_snapshots').upsert({
+        snapshot_date: today,
+        total_assets: cash + invest,
+        total_liabilities: credit + loan,
+        net_worth: (cash + invest) - (credit + loan),
+        cash_balance: cash, investment_balance: invest,
+        credit_balance: credit, loan_balance: loan,
+      }, { onConflict: 'snapshot_date' })
+    }
+
+    await refetchAccounts()
+    navigate('/accounts')
+  }
 
   const account = accounts.find((a) => a.id === accountId)
   const acctTxns = useMemo(() => transactions.filter((t) => t.account_id === accountId), [transactions, accountId])
@@ -54,11 +92,17 @@ function AccountDetail({ accountId }: { accountId: string }) {
 
   return (
     <div className="p-6 space-y-5">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: config?.color || '#6b7280' }} />
         <h1 className="text-2xl font-semibold text-white">{account.name}</h1>
         {account.mask && <span className="text-gray-500">****{account.mask}</span>}
         <span className="text-xs px-2 py-0.5 rounded-full bg-[#252839] text-gray-400">{account.subtype || account.type}</span>
+        <button
+          onClick={handleDelete}
+          className="ml-auto text-xs px-3 py-1.5 rounded-lg border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 transition-colors"
+        >
+          Delete
+        </button>
       </div>
 
       {/* Stat cards */}
@@ -232,11 +276,28 @@ function AccountList() {
   const { accounts, loading, refetch } = useAccounts()
   const { createLinkToken, open, ready, loading: linkLoading } = usePlaidLink(refetch)
 
-  useEffect(() => { createLinkToken() }, [createLinkToken])
-
   const [showMenu, setShowMenu] = useState(false)
   const [showCsvModal, setShowCsvModal] = useState(false)
+  const [pendingOpen, setPendingOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  // Open Plaid once token is ready (after user clicks Link via Plaid)
+  useEffect(() => {
+    if (pendingOpen && ready) {
+      setPendingOpen(false)
+      open()
+    }
+  }, [pendingOpen, ready, open])
+
+  const handlePlaidLink = () => {
+    setShowMenu(false)
+    if (ready) {
+      open()
+    } else {
+      setPendingOpen(true)
+      createLinkToken()
+    }
+  }
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -282,8 +343,8 @@ function AccountList() {
           {showMenu && (
             <div className="absolute right-0 mt-1.5 w-48 bg-[#1a1d29] border border-[#2a2d3d] rounded-lg shadow-xl overflow-hidden z-50">
               <button
-                onClick={() => { setShowMenu(false); open() }}
-                disabled={!ready || linkLoading}
+                onClick={handlePlaidLink}
+                disabled={linkLoading || pendingOpen}
                 className="w-full px-4 py-2.5 text-sm text-left text-gray-200 hover:bg-[#252839] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 <span className="block font-medium">Link via Plaid</span>

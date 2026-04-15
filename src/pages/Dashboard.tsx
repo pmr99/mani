@@ -610,9 +610,9 @@ export function Dashboard() {
         <div className="bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl p-4" onClick={privacy.toggle}>
           <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Net Worth</p>
           <div className="flex items-baseline gap-2 flex-wrap">
-            <p className="text-3xl font-bold text-white tabular-nums">{pm(formatCurrency(nwResult.netWorth))}</p>
+            <p className="text-3xl font-bold text-white font-mono">{pm(formatCurrency(nwResult.netWorth))}</p>
             {nwResult.monthlyChange !== 0 && (
-              <span className={`text-sm font-medium tabular-nums ${nwResult.monthlyChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+              <span className={`text-sm font-medium font-mono ${nwResult.monthlyChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                 {nwResult.monthlyChange >= 0 ? '▲' : '▼'} {pm(formatCurrency(Math.abs(nwResult.monthlyChange)))}
               </span>
             )}
@@ -620,15 +620,15 @@ export function Dashboard() {
           <div className="grid grid-cols-3 gap-2 mt-3">
             <div className="min-w-0">
               <p className="text-[10px] text-gray-500">Assets</p>
-              <p className="text-xs sm:text-sm font-semibold text-emerald-400 tabular-nums truncate">{pm(formatCurrency(totalAssets))}</p>
+              <p className="text-xs font-semibold text-emerald-400 font-mono truncate">{pm(formatCurrency(totalAssets))}</p>
             </div>
             <div className="min-w-0">
               <p className="text-[10px] text-gray-500">Liabilities</p>
-              <p className="text-xs sm:text-sm font-semibold text-rose-400 tabular-nums truncate">{pm(formatCurrency(totalLiabilities))}</p>
+              <p className="text-xs font-semibold text-rose-400 font-mono truncate">{pm(formatCurrency(totalLiabilities))}</p>
             </div>
             <div className="min-w-0">
               <p className="text-[10px] text-gray-500">Cash</p>
-              <p className="text-xs sm:text-sm font-semibold text-blue-400 tabular-nums truncate">{pm(formatCurrency(totalCash))}</p>
+              <p className="text-xs font-semibold text-blue-400 font-mono truncate">{pm(formatCurrency(totalCash))}</p>
             </div>
           </div>
           {/* Proportion bar */}
