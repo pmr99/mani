@@ -315,7 +315,7 @@ export function Wealth() {
                 </linearGradient>
               </defs>
               <XAxis dataKey="label" {...ax} interval={Math.max(0, Math.floor(nwChartData.length / 8))} />
-              <YAxis {...ax} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+              <YAxis {...ax} domain={[(dataMin: number) => Math.floor(dataMin * 0.98), (dataMax: number) => Math.ceil(dataMax * 1.02)]} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
               <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={tt} wrapperStyle={{ zIndex: 50 }} />
               <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} fill="url(#nwGrad)" name="Net Worth" />
               {nwDragStart && nwDragEnd && (

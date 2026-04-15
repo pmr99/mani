@@ -609,26 +609,26 @@ export function Dashboard() {
       <div className="md:hidden">
         <div className="bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl p-4" onClick={privacy.toggle}>
           <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Net Worth</p>
-          <div className="flex items-baseline gap-3">
-            <p className="text-3xl font-bold text-white">{pm(formatCurrency(nwResult.netWorth))}</p>
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <p className="text-3xl font-bold text-white tabular-nums">{pm(formatCurrency(nwResult.netWorth))}</p>
             {nwResult.monthlyChange !== 0 && (
-              <span className={`text-sm font-medium ${nwResult.monthlyChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+              <span className={`text-sm font-medium tabular-nums ${nwResult.monthlyChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                 {nwResult.monthlyChange >= 0 ? '▲' : '▼'} {pm(formatCurrency(Math.abs(nwResult.monthlyChange)))}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-4 mt-3">
-            <div className="flex-1">
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            <div className="min-w-0">
               <p className="text-[10px] text-gray-500">Assets</p>
-              <p className="text-sm font-semibold text-emerald-400">{pm(formatCurrency(totalAssets))}</p>
+              <p className="text-xs sm:text-sm font-semibold text-emerald-400 tabular-nums truncate">{pm(formatCurrency(totalAssets))}</p>
             </div>
-            <div className="flex-1">
+            <div className="min-w-0">
               <p className="text-[10px] text-gray-500">Liabilities</p>
-              <p className="text-sm font-semibold text-rose-400">{pm(formatCurrency(totalLiabilities))}</p>
+              <p className="text-xs sm:text-sm font-semibold text-rose-400 tabular-nums truncate">{pm(formatCurrency(totalLiabilities))}</p>
             </div>
-            <div className="flex-1">
+            <div className="min-w-0">
               <p className="text-[10px] text-gray-500">Cash</p>
-              <p className="text-sm font-semibold text-blue-400">{pm(formatCurrency(totalCash))}</p>
+              <p className="text-xs sm:text-sm font-semibold text-blue-400 tabular-nums truncate">{pm(formatCurrency(totalCash))}</p>
             </div>
           </div>
           {/* Proportion bar */}
@@ -693,7 +693,7 @@ export function Dashboard() {
                     </linearGradient>
                   </defs>
                   <XAxis dataKey="label" {...ax} />
-                  <YAxis {...ax} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+                  <YAxis {...ax} domain={[(dataMin: number) => Math.floor(dataMin * 0.98), (dataMax: number) => Math.ceil(dataMax * 1.02)]} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
                   <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={tt} wrapperStyle={{ zIndex: 50 }} />
                   <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} fill="url(#freeNwGrad)" />
                 </AreaChart>
