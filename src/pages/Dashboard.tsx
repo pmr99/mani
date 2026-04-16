@@ -610,10 +610,10 @@ export function Dashboard() {
         <div className="bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl p-4" onClick={privacy.toggle}>
           <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Net Worth</p>
           <div className="flex items-baseline gap-2 flex-wrap">
-            <p className="text-3xl font-bold text-white tabular-nums">{pm(formatCurrency(nwResult.netWorth))}</p>
+            <p className="text-3xl font-bold text-white tabular-nums">{pm(formatCurrencyCompact(nwResult.netWorth))}</p>
             {nwResult.monthlyChange !== 0 && (
               <span className={`text-sm font-medium tabular-nums ${nwResult.monthlyChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {nwResult.monthlyChange >= 0 ? '▲' : '▼'} {pm(formatCurrency(Math.abs(nwResult.monthlyChange)))}
+                {nwResult.monthlyChange >= 0 ? '▲' : '▼'} {pm(formatCurrencyCompact(Math.abs(nwResult.monthlyChange)))}
               </span>
             )}
           </div>

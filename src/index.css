@@ -65,12 +65,16 @@ input, select {
 }
 
 /* Kill orange tap/focus highlight on charts */
-svg, .recharts-wrapper, .recharts-surface {
+svg, .recharts-wrapper, .recharts-surface, .recharts-pie-sector, .recharts-sector {
   -webkit-tap-highlight-color: transparent;
-  outline: none;
+  outline: none !important;
   -webkit-user-select: none;
   user-select: none;
 }
-.recharts-wrapper:focus, .recharts-surface:focus {
-  outline: none;
+.recharts-wrapper *, .recharts-surface *, .recharts-pie * {
+  outline: none !important;
+}
+.recharts-wrapper:focus, .recharts-surface:focus,
+.recharts-wrapper *:focus, .recharts-surface *:focus {
+  outline: none !important;
 }

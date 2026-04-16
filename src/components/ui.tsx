@@ -346,7 +346,7 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
             animationBegin={0} animationDuration={500}
             activeIndex={[]} activeShape={false as any}
           >
-            {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} cursor="pointer" />)}
+            {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} cursor="pointer" tabIndex={-1} style={{ outline: 'none' }} />)}
           </Pie>
           <Tooltip
             wrapperStyle={{ zIndex: 50, pointerEvents: 'none', transition: 'none' }}
@@ -414,8 +414,20 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
                   strokeWidth={0} labelLine={false}
                   animationBegin={0} animationDuration={500}
                   activeIndex={[]} activeShape={false as any}
+                  label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+                    if (percent < 0.05) return null as any
+                    const RADIAN = Math.PI / 180
+                    const radius = innerRadius + (outerRadius - innerRadius) * 0.5
+                    const x = cx + radius * Math.cos(-midAngle * RADIAN)
+                    const y = cy + radius * Math.sin(-midAngle * RADIAN)
+                    return (
+                      <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={600} style={{ pointerEvents: 'none' }}>
+                        {`${(percent * 100).toFixed(0)}%`}
+                      </text>
+                    )
+                  }}
                 >
-                  {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} cursor="pointer" />)}
+                  {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} cursor="pointer" tabIndex={-1} style={{ outline: 'none' }} />)}
                 </Pie>
                 <Tooltip
                   wrapperStyle={{ zIndex: 50, pointerEvents: 'none', transition: 'none' }}
@@ -474,7 +486,7 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
             animationBegin={0} animationDuration={500}
             activeIndex={[]} activeShape={false as any}
           >
-            {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} cursor="pointer" />)}
+            {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} cursor="pointer" tabIndex={-1} style={{ outline: 'none' }} />)}
           </Pie>
           <Tooltip
             wrapperStyle={{ zIndex: 50, pointerEvents: 'none', transition: 'none' }}
