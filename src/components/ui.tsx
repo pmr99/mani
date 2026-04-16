@@ -404,13 +404,13 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
       <>
         {/* Mobile: vertical stack with responsive square donut */}
         <div className="sm:hidden">
-          <div className="mx-auto w-full max-w-[200px] aspect-square">
+          <div className="relative mx-auto w-full max-w-[260px] aspect-square">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={data} dataKey="value" nameKey="name"
                   cx="50%" cy="50%"
-                  outerRadius="85%" innerRadius="50%"
+                  outerRadius="88%" innerRadius="55%"
                   strokeWidth={0} labelLine={false}
                   animationBegin={0} animationDuration={500}
                   activeIndex={[]} activeShape={false as any}
@@ -438,8 +438,15 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
                 />
               </PieChart>
             </ResponsiveContainer>
+            {/* Center total overlay */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center">
+                <p className="text-base font-bold text-white tabular-nums">{pm(formatCurrency(total))}</p>
+                <p className="text-[10px] text-gray-500 mt-0.5">{data.length} items</p>
+              </div>
+            </div>
           </div>
-          <div className="mt-3">{legendContent(180)}</div>
+          <div className="mt-3">{legendContent(200)}</div>
         </div>
         {/* Desktop: side-by-side */}
         <div className="hidden sm:flex gap-4 items-center" style={{ height }}>

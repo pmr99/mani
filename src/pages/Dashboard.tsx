@@ -617,18 +617,18 @@ export function Dashboard() {
               </span>
             )}
           </div>
-          <div className="grid grid-cols-3 gap-1 mt-3">
+          <div className="grid grid-cols-3 gap-2 mt-3">
             <div className="min-w-0">
               <p className="text-[10px] text-gray-500">Assets</p>
-              <p className="text-[11px] font-semibold text-emerald-400 tabular-nums truncate">{pm(formatCurrency(totalAssets))}</p>
+              <p className="text-sm font-semibold text-emerald-400 tabular-nums">{pm(formatCurrencyCompact(totalAssets))}</p>
             </div>
             <div className="min-w-0">
               <p className="text-[10px] text-gray-500">Liabilities</p>
-              <p className="text-[11px] font-semibold text-rose-400 tabular-nums truncate">{pm(formatCurrency(totalLiabilities))}</p>
+              <p className="text-sm font-semibold text-rose-400 tabular-nums">{pm(formatCurrencyCompact(totalLiabilities))}</p>
             </div>
             <div className="min-w-0">
               <p className="text-[10px] text-gray-500">Cash</p>
-              <p className="text-[11px] font-semibold text-blue-400 tabular-nums truncate">{pm(formatCurrency(totalCash))}</p>
+              <p className="text-sm font-semibold text-blue-400 tabular-nums">{pm(formatCurrencyCompact(totalCash))}</p>
             </div>
           </div>
           {/* Proportion bar */}
