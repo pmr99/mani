@@ -402,10 +402,42 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
   if (showLegend) {
     return (
       <>
-        {/* Mobile: vertical stack with smaller square donut */}
+        {/* Mobile: vertical stack with responsive square donut */}
         <div className="sm:hidden">
-          <div className="mx-auto" style={{ width: 180, height: 180 }}>
-            {pieContent(180)}
+          <div className="mx-auto w-full max-w-[200px] aspect-square">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={data} dataKey="value" nameKey="name"
+                  cx="50%" cy="50%"
+                  outerRadius="85%" innerRadius="50%"
+                  strokeWidth={0} labelLine={false}
+                  animationBegin={0} animationDuration={500}
+                  activeIndex={[]} activeShape={false as any}
+                >
+                  {data.map((item, i) => <Cell key={i} fill={getColor(item, i)} cursor="pointer" />)}
+                </Pie>
+                <Tooltip
+                  wrapperStyle={{ zIndex: 50, pointerEvents: 'none', transition: 'none' }}
+                  allowEscapeViewBox={{ x: true, y: true }}
+                  offset={15}
+                  isAnimationActive={false}
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null
+                    const item = payload[0]
+                    const val = item.value as number
+                    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0'
+                    return (
+                      <div style={{ ...chartTooltipStyle, zIndex: 50 }} className="p-3 rounded-xl shadow-xl">
+                        <p className="text-xs text-gray-300 font-medium">{formatCategoryName(String(item.name))}</p>
+                        <p className="text-sm text-white font-bold mt-1">{pm(formatCurrency(val))}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{pct}% of {pm(formatCurrency(total))}</p>
+                      </div>
+                    )
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
           <div className="mt-3">{legendContent(180)}</div>
         </div>
