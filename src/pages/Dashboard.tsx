@@ -750,7 +750,7 @@ export function Dashboard() {
                   <div>
                     {/* Total + proportion bar */}
                     <div className="mb-4">
-                      <p className="text-2xl font-bold text-rose-400">{formatCurrency(liabTotal)}</p>
+                      <p className="text-2xl font-bold text-rose-400 tabular-nums">{pm(formatCurrency(liabTotal))}</p>
                       <div className="flex h-3 rounded-full overflow-hidden mt-2">
                         {liabAccounts.map((a, i) => {
                           const pct = liabTotal > 0 ? (a.bal / liabTotal) * 100 : 0
@@ -771,15 +771,15 @@ export function Dashboard() {
                       {liabAccounts.map((a) => {
                         const pct = liabTotal > 0 ? (a.bal / liabTotal) * 100 : 0
                         return (
-                          <div key={a.id} className="flex items-center justify-between py-1.5 border-b border-[#2a2d3d]/30 last:border-0 text-xs">
-                            <div className="flex items-center gap-2 min-w-0">
+                          <div key={a.id} className="flex items-center justify-between py-1.5 border-b border-[#2a2d3d]/30 last:border-0 text-xs gap-3">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
                               <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: a.color }} />
                               <span className="text-gray-300 truncate">{a.name.replace('Plaid ', '')}</span>
                               <span className="text-[9px] text-gray-600 shrink-0">{a.type === 'credit' ? 'Card' : 'Loan'}</span>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0 ml-2">
+                            <div className="flex items-center gap-2 shrink-0 tabular-nums">
                               <span className="text-gray-500">{pct.toFixed(0)}%</span>
-                              <span className="font-medium" style={{ color: a.color }}>{formatCurrency(a.bal)}</span>
+                              <span className="font-medium" style={{ color: a.color }}>{pm(formatCurrency(a.bal))}</span>
                             </div>
                           </div>
                         )

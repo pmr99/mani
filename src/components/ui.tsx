@@ -402,9 +402,11 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
   if (showLegend) {
     return (
       <>
-        {/* Mobile: vertical stack */}
+        {/* Mobile: vertical stack with smaller donut */}
         <div className="sm:hidden">
-          {pieContent(Math.min(height, 220))}
+          <div className="mx-auto" style={{ maxWidth: 180 }}>
+            {pieContent(180)}
+          </div>
           <div className="mt-3">{legendContent(180)}</div>
         </div>
         {/* Desktop: side-by-side */}
