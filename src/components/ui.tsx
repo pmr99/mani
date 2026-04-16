@@ -402,9 +402,9 @@ export function DonutChart({ data, height = 340, showLegend = true, colorMode = 
   if (showLegend) {
     return (
       <>
-        {/* Mobile: vertical stack with smaller donut */}
+        {/* Mobile: vertical stack with smaller square donut */}
         <div className="sm:hidden">
-          <div className="mx-auto" style={{ maxWidth: 180 }}>
+          <div className="mx-auto" style={{ width: 180, height: 180 }}>
             {pieContent(180)}
           </div>
           <div className="mt-3">{legendContent(180)}</div>
