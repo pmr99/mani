@@ -617,7 +617,7 @@ export function Dashboard() {
               </span>
             )}
           </div>
-          <div className="grid grid-cols-3 gap-2 mt-3">
+          <div className="grid grid-cols-3 gap-1 mt-3">
             <div className="min-w-0">
               <p className="text-[10px] text-gray-500">Assets</p>
               <p className="text-[11px] font-semibold text-emerald-400 tabular-nums truncate">{pm(formatCurrency(totalAssets))}</p>
