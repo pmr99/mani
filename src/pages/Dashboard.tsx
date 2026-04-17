@@ -610,25 +610,26 @@ export function Dashboard() {
         <div className="bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl p-4" onClick={privacy.toggle}>
           <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Net Worth</p>
           <div className="flex items-baseline gap-2 flex-wrap">
-            <p className="text-3xl font-bold text-white tabular-nums">{pm(formatCurrencyCompact(nwResult.netWorth))}</p>
+            <p className="text-3xl font-bold text-white tabular-nums">{pm(formatCurrency(nwResult.netWorth))}</p>
             {nwResult.monthlyChange !== 0 && (
               <span className={`text-sm font-medium tabular-nums ${nwResult.monthlyChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {nwResult.monthlyChange >= 0 ? '▲' : '▼'} {pm(formatCurrencyCompact(Math.abs(nwResult.monthlyChange)))}
+                {nwResult.monthlyChange >= 0 ? '▲' : '▼'} {pm(formatCurrency(Math.abs(nwResult.monthlyChange)))}
               </span>
             )}
           </div>
-          <div className="grid grid-cols-3 gap-2 mt-3">
-            <div className="min-w-0">
-              <p className="text-[10px] text-gray-500">Assets</p>
-              <p className="text-sm font-semibold text-emerald-400 tabular-nums">{pm(formatCurrencyCompact(totalAssets))}</p>
+          {/* Stack vertically — each row has full width so XX fits */}
+          <div className="space-y-1 mt-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-500">Assets</span>
+              <span className="text-sm font-semibold text-emerald-400 tabular-nums">{pm(formatCurrency(totalAssets))}</span>
             </div>
-            <div className="min-w-0">
-              <p className="text-[10px] text-gray-500">Liabilities</p>
-              <p className="text-sm font-semibold text-rose-400 tabular-nums">{pm(formatCurrencyCompact(totalLiabilities))}</p>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-500">Liabilities</span>
+              <span className="text-sm font-semibold text-rose-400 tabular-nums">{pm(formatCurrency(totalLiabilities))}</span>
             </div>
-            <div className="min-w-0">
-              <p className="text-[10px] text-gray-500">Cash</p>
-              <p className="text-sm font-semibold text-blue-400 tabular-nums">{pm(formatCurrencyCompact(totalCash))}</p>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-500">Cash</span>
+              <span className="text-sm font-semibold text-blue-400 tabular-nums">{pm(formatCurrency(totalCash))}</span>
             </div>
           </div>
           {/* Proportion bar */}

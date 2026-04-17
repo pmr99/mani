@@ -68,22 +68,13 @@ export function Wealth() {
     const fmtLabel = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
     if (nwView === 'overall') {
-      // Build net worth from cash + investment daily values
-      const dateMap = new Map<string, number>()
-      for (const p of cashTimeline) dateMap.set(p.date, (dateMap.get(p.date) || 0) + p.value)
-      for (const p of portfolioTimeline) dateMap.set(p.date, (dateMap.get(p.date) || 0) + p.value)
-      // Subtract liabilities (use snapshots if available, else current)
-      const totalLiab = accounts.filter((a) => a.type === 'credit' || a.type === 'loan').reduce((s, a) => s + (a.current_balance ?? 0), 0)
-      const entries = [...dateMap.entries()].sort(([a], [b]) => a.localeCompare(b))
-      if (entries.length > 0) {
-        return entries.map(([date, assetVal]) => ({
-          label: fmtLabel(date),
-          value: assetVal - totalLiab,
-        }))
-      }
-      // Fallback
-      const today = todayStr()
-      return [{ label: fmtLabel(addDays(today, -rangeDays)), value: nw.netWorth }, { label: fmtLabel(today), value: nw.netWorth }]
+      // Use net_worth_snapshots (same source as Dashboard) + append today's live value
+      const todayStrNow = new Date().toISOString().split('T')[0]
+      const historical = snapshots
+        .filter((s) => s.snapshot_date !== todayStrNow)
+        .map((s) => ({ label: fmtLabel(s.snapshot_date), value: s.net_worth }))
+      const liveToday = { label: 'Today', value: nw.netWorth }
+      return [...historical, liveToday]
     }
 
     // Money in / money out view — from transactions
@@ -104,7 +95,7 @@ export function Wealth() {
       inflow: Math.round(v.inflow),
       outflow: Math.round(v.outflow),
     }))
-  }, [nwView, cashTimeline, portfolioTimeline, transactions, rangeDays, accounts, nw.netWorth])
+  }, [nwView, snapshots, transactions, rangeDays, nw.netWorth])
 
   // Drag handlers (after nwChartData is defined)
   const handleNwMouseDown = useCallback((e: { activeLabel?: string }) => {
