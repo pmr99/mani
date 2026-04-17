@@ -225,47 +225,75 @@ export function Wealth() {
       </div>
 
       {/* Net Worth Hero */}
-      <div className="bg-gradient-to-r from-[#10b981]/15 to-[#06b6d4]/10 border border-[#10b981]/20 rounded-2xl p-6">
+      <div className="bg-gradient-to-r from-[#10b981]/15 to-[#06b6d4]/10 border border-[#10b981]/20 rounded-2xl p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           {/* Left: Net Worth */}
-          <div>
+          <div className="min-w-0">
             <p className="text-sm text-gray-400">Net worth</p>
-            <p className="text-4xl font-bold text-white mt-1">{pm(formatCurrency(nw.netWorth))}</p>
-            <span className={`text-sm font-medium ${nw.monthlyChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+            <p className="text-2xl sm:text-4xl font-bold text-white mt-1 tabular-nums">{pm(formatCurrency(nw.netWorth))}</p>
+            <span className={`text-sm font-medium tabular-nums ${nw.monthlyChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
               {nw.monthlyChange >= 0 ? '+' : ''}{pm(formatCurrency(nw.monthlyChange))}
               {nw.monthlyChangePercent !== 0 && ` (${nw.monthlyChangePercent > 0 ? '+' : ''}${nw.monthlyChangePercent}%)`}
               {' '}this month
             </span>
           </div>
 
-          {/* Right: Assets & Liabilities */}
-          <div className="flex gap-6">
+          {/* Mobile: stacked rows. Desktop: side-by-side Assets/Liabilities. */}
+          <div className="sm:hidden space-y-1 pt-2 border-t border-white/5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-500">Assets</span>
+              <span className="text-sm font-semibold text-emerald-400 tabular-nums">{pm(formatCurrency(nw.totalAssets))}</span>
+            </div>
+            <div className="flex items-center justify-between pl-3">
+              <span className="text-[10px] text-gray-500 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-blue-500" />Cash</span>
+              <span className="text-[11px] text-gray-400 tabular-nums">{pm(formatCurrency(nw.cashBalance))}</span>
+            </div>
+            <div className="flex items-center justify-between pl-3">
+              <span className="text-[10px] text-gray-500 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-purple-500" />Invest</span>
+              <span className="text-[11px] text-gray-400 tabular-nums">{pm(formatCurrency(nw.investmentBalance))}</span>
+            </div>
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-xs text-gray-500">Liabilities</span>
+              <span className="text-sm font-semibold text-rose-400 tabular-nums">{pm(formatCurrency(nw.totalLiabilities))}</span>
+            </div>
+            <div className="flex items-center justify-between pl-3">
+              <span className="text-[10px] text-gray-500 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-rose-500" />Credit</span>
+              <span className="text-[11px] text-gray-400 tabular-nums">{pm(formatCurrency(nw.creditBalance))}</span>
+            </div>
+            <div className="flex items-center justify-between pl-3">
+              <span className="text-[10px] text-gray-500 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-amber-500" />Loans</span>
+              <span className="text-[11px] text-gray-400 tabular-nums">{pm(formatCurrency(nw.loanBalance))}</span>
+            </div>
+          </div>
+
+          {/* Desktop: Assets & Liabilities side-by-side */}
+          <div className="hidden sm:flex gap-6">
             <div className="sm:text-right">
               <p className="text-[10px] text-gray-500 uppercase tracking-wider">Assets</p>
-              <p className="text-2xl font-bold text-emerald-400 mt-1">{pm(formatCurrency(nw.totalAssets))}</p>
+              <p className="text-2xl font-bold text-emerald-400 mt-1 tabular-nums">{pm(formatCurrency(nw.totalAssets))}</p>
               <div className="flex items-center gap-2 mt-1 justify-end">
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  <span className="text-[10px] text-gray-500">Cash {pm(formatCurrency(nw.cashBalance))}</span>
+                  <span className="text-[10px] text-gray-500 tabular-nums">Cash {pm(formatCurrency(nw.cashBalance))}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-purple-500" />
-                  <span className="text-[10px] text-gray-500">Invest {pm(formatCurrency(nw.investmentBalance))}</span>
+                  <span className="text-[10px] text-gray-500 tabular-nums">Invest {pm(formatCurrency(nw.investmentBalance))}</span>
                 </div>
               </div>
             </div>
             <div className="w-px bg-[#2a2d3d]" />
             <div className="text-right">
               <p className="text-[10px] text-gray-500 uppercase tracking-wider">Liabilities</p>
-              <p className="text-2xl font-bold text-rose-400 mt-1">{pm(formatCurrency(nw.totalLiabilities))}</p>
+              <p className="text-2xl font-bold text-rose-400 mt-1 tabular-nums">{pm(formatCurrency(nw.totalLiabilities))}</p>
               <div className="flex items-center gap-2 mt-1 justify-end">
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-rose-500" />
-                  <span className="text-[10px] text-gray-500">Credit {pm(formatCurrency(nw.creditBalance))}</span>
+                  <span className="text-[10px] text-gray-500 tabular-nums">Credit {pm(formatCurrency(nw.creditBalance))}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-amber-500" />
-                  <span className="text-[10px] text-gray-500">Loans {pm(formatCurrency(nw.loanBalance))}</span>
+                  <span className="text-[10px] text-gray-500 tabular-nums">Loans {pm(formatCurrency(nw.loanBalance))}</span>
                 </div>
               </div>
             </div>
