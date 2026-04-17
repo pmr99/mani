@@ -303,13 +303,13 @@ export function Wealth() {
 
       {/* ═══ NET WORTH OVER TIME ═══ */}
       <Card className="relative select-none">
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
           <ChartLabel>Net Worth Over Time</ChartLabel>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="flex gap-0.5 bg-[#252839] p-0.5 rounded-lg">
               {([['overall', 'Overall'], ['inout', 'Money In & Out']] as const).map(([key, label]) => (
                 <button key={key} onClick={() => setNwView(key)}
-                  className={`px-2.5 py-1 text-[10px] rounded-md transition-all ${nwView === key ? 'bg-emerald-500 text-white' : 'text-gray-500 hover:text-gray-300'}`}>
+                  className={`px-2.5 py-1 text-[10px] rounded-md whitespace-nowrap transition-all ${nwView === key ? 'bg-emerald-500 text-white' : 'text-gray-500 hover:text-gray-300'}`}>
                   {label}
                 </button>
               ))}
