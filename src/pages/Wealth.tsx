@@ -326,7 +326,7 @@ export function Wealth() {
         </div>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT.large}>
           {nwView === 'overall' ? (
-            <AreaChart data={nwChartData} onMouseDown={handleNwMouseDown} onMouseMove={handleNwMouseMove} onMouseUp={handleNwMouseUp}>
+            <AreaChart data={nwChartData} margin={{ top: 5, right: 5, left: -10, bottom: 0 }} onMouseDown={handleNwMouseDown} onMouseMove={handleNwMouseMove} onMouseUp={handleNwMouseUp}>
               <defs>
                 <linearGradient id="nwGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
@@ -342,7 +342,7 @@ export function Wealth() {
               )}
             </AreaChart>
           ) : (
-            <BarChart data={nwChartData} barGap={4} maxBarSize={40}>
+            <BarChart data={nwChartData} barGap={4} maxBarSize={40} margin={{ top: 5, right: 5, left: -10, bottom: 0 }}>
               <XAxis dataKey="label" {...ax} interval={0} />
               <YAxis {...ax} tickFormatter={(v) => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
               <Tooltip cursor={{ fill: '#10b98110' }} formatter={(v: number) => formatCurrency(v)} contentStyle={tt} wrapperStyle={{ zIndex: 50 }} />
