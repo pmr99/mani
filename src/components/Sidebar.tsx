@@ -150,7 +150,7 @@ export function Sidebar({ signOut }: { signOut: () => void }) {
 
       {/* Bottom — Mode Toggle + Sync */}
       <div className="mt-auto pt-4 border-t border-[#2a2d3d] space-y-3">
-        {!freeMode.isFree && <SyncButton />}
+        <SyncButton />{/* works in both free + full mode */}
         <div className="px-3">
           <div className="flex items-center gap-2 mb-2">
             <button

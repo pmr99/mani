@@ -18,6 +18,7 @@ import { computeForecast } from '../lib/engines/forecasting'
 import { SyncButton } from '../components/SyncButton'
 import { useFreeMode } from '../hooks/useFreeMode'
 import { usePrivacy } from '../hooks/usePrivacy'
+import { supabase } from '../lib/supabase'
 // Privacy is provided via context from App.tsx — usePrivacy() reads it
 import {
   Card, ChartLabel, SectionTitle, StatCard, MerchantBar, TransactionRow,
@@ -103,6 +104,28 @@ function bucketByPeriod(txns: { date: string; amount: number }[], period: Period
 }
 
 // Card and ChartLabel imported from ui.tsx
+
+// Small refresh button for the mobile hero — calls free refresh-balances endpoint
+function MobileSyncButton() {
+  const [syncing, setSyncing] = useState(false)
+  const handleSync = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSyncing(true)
+    try {
+      await supabase.functions.invoke('refresh-balances')
+      window.location.reload()
+    } catch {
+      setSyncing(false)
+    }
+  }
+  return (
+    <button onClick={handleSync} disabled={syncing} className="text-gray-500 hover:text-gray-300 disabled:opacity-50" title="Refresh balances">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={syncing ? 'animate-spin' : ''}>
+        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+    </button>
+  )
+}
 
 export function Dashboard() {
   const { isFree } = useFreeMode()
@@ -607,8 +630,11 @@ export function Dashboard() {
 
       {/* ── Mobile: Compact hero card ── */}
       <div className="md:hidden">
-        <div className="bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl p-4" onClick={privacy.toggle}>
-          <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Net Worth</p>
+        <div className="bg-[#1a1d29] border border-[#2a2d3d] rounded-2xl p-4 relative" onClick={privacy.toggle}>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs text-gray-500 uppercase tracking-wider">Net Worth</p>
+            <MobileSyncButton />
+          </div>
           <div className="flex items-baseline gap-2 flex-wrap">
             <p className="text-3xl font-bold text-white tabular-nums">{pm(formatCurrency(nwResult.netWorth))}</p>
             {nwResult.monthlyChange !== 0 && (
