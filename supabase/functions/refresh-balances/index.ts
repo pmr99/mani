@@ -40,10 +40,14 @@ serve(async (req) => {
     }
 
     let totalAccounts = 0
+    const results: Array<{ institution: string; status: string; error?: string; error_code?: string; accounts?: number }> = []
 
     for (const item of items) {
       // Skip CSV-imported items — they don't have a real Plaid access token
-      if (item.access_token === 'csv-import') continue
+      if (item.access_token === 'csv-import') {
+        results.push({ institution: item.institution_name, status: 'skipped-csv' })
+        continue
+      }
 
       // /accounts/get is FREE — does not count against any product cap
       const res = await fetch(`${baseUrl}/accounts/get`, {
@@ -57,10 +61,29 @@ serve(async (req) => {
       })
       const data = await res.json()
 
-      if (data.error) continue
-
-      for (const acct of data.accounts || []) {
+      if (data.error_code || !res.ok) {
+        console.error(`[${item.institution_name}] Plaid error: ${data.error_code} — ${data.error_message}`)
+        results.push({
+          institution: item.institution_name,
+          status: 'error',
+          error_code: data.error_code,
+          error: data.error_message,
+        })
+        // Persist error state so the UI can flag it and offer reconnect
         await supabase
+          .from('plaid_items')
+          .update({
+            last_synced_at: new Date().toISOString(),
+            error_code: data.error_code || 'UNKNOWN',
+            error_message: data.error_message || 'Unknown Plaid error',
+          })
+          .eq('id', item.id)
+        continue
+      }
+
+      let itemAccountsUpdated = 0
+      for (const acct of data.accounts || []) {
+        const upd = await supabase
           .from('accounts')
           .update({
             current_balance: acct.balances.current,
@@ -68,13 +91,27 @@ serve(async (req) => {
             updated_at: new Date().toISOString(),
           })
           .eq('plaid_account_id', acct.account_id)
-        totalAccounts++
+          .select('id')
+        if (upd.data && upd.data.length > 0) {
+          itemAccountsUpdated++
+          totalAccounts++
+        }
       }
 
-      // Update last_synced_at
+      results.push({
+        institution: item.institution_name,
+        status: 'ok',
+        accounts: itemAccountsUpdated,
+      })
+
+      // Update last_synced_at and clear any prior error
       await supabase
         .from('plaid_items')
-        .update({ last_synced_at: new Date().toISOString() })
+        .update({
+          last_synced_at: new Date().toISOString(),
+          error_code: null,
+          error_message: null,
+        })
         .eq('id', item.id)
     }
 
@@ -103,7 +140,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ accounts_refreshed: totalAccounts, mode: 'free' }),
+      JSON.stringify({ accounts_refreshed: totalAccounts, mode: 'free', results }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {

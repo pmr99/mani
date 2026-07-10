@@ -1,8 +1,11 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const PLAID_CLIENT_ID = Deno.env.get('PLAID_CLIENT_ID')!
 const PLAID_SECRET = Deno.env.get('PLAID_SECRET')!
 const PLAID_ENV = Deno.env.get('PLAID_ENV') || 'sandbox'
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 const PLAID_BASE_URL: Record<string, string> = {
   sandbox: 'https://sandbox.plaid.com',
@@ -22,16 +25,41 @@ serve(async (req) => {
   }
 
   try {
-    const body = {
+    // If a plaid_item_id is passed, this is an UPDATE MODE token (for reconnecting stale items)
+    let updateAccessToken: string | undefined
+    let institutionName: string | undefined
+    if (req.body) {
+      try {
+        const reqBody = await req.json()
+        if (reqBody?.plaid_item_id) {
+          const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+          const { data: item } = await sb.from('plaid_items').select('access_token, institution_name').eq('id', reqBody.plaid_item_id).single()
+          if (item?.access_token && item.access_token !== 'csv-import') {
+            updateAccessToken = item.access_token
+            institutionName = item.institution_name
+          }
+        }
+      } catch { /* no body — normal flow */ }
+    }
+
+    const body: any = {
       client_id: PLAID_CLIENT_ID,
       secret: PLAID_SECRET,
       user: { client_user_id: 'personal-user' },
       client_name: 'Mani',
-      products: ['transactions'],
-      required_if_supported_products: ['investments'],
       country_codes: ['US'],
       language: 'en',
       redirect_uri: PLAID_ENV === 'production' ? 'https://www.pradeepmanirathnam.com/oauth-return.html' : undefined,
+    }
+
+    if (updateAccessToken) {
+      // Update mode: pass access_token, NO products (Plaid derives from existing item)
+      body.access_token = updateAccessToken
+      console.log('[create-link-token] UPDATE MODE for:', institutionName)
+    } else {
+      // Normal mode: new link
+      body.products = ['transactions']
+      body.required_if_supported_products = ['investments']
     }
 
     console.log('[create-link-token] env:', PLAID_ENV, '| redirect_uri:', body.redirect_uri ?? 'none')

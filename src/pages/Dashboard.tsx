@@ -19,6 +19,7 @@ import { SyncButton } from '../components/SyncButton'
 import { useFreeMode } from '../hooks/useFreeMode'
 import { usePrivacy } from '../hooks/usePrivacy'
 import { supabase } from '../lib/supabase'
+import { ReconnectBanner } from '../components/ReconnectBanner'
 // Privacy is provided via context from App.tsx — usePrivacy() reads it
 import {
   Card, ChartLabel, SectionTitle, StatCard, MerchantBar, TransactionRow,
@@ -627,6 +628,8 @@ export function Dashboard() {
         </div>
         {portfolioSyncing && <span className="text-xs text-purple-400 animate-pulse">Syncing investments...</span>}
       </div>
+
+      <ReconnectBanner />
 
       {/* ── Mobile: Compact hero card ── */}
       <div className="md:hidden">
