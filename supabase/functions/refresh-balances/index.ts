@@ -40,7 +40,7 @@ serve(async (req) => {
     }
 
     let totalAccounts = 0
-    const results: Array<{ institution: string; status: string; error?: string; error_code?: string; accounts?: number }> = []
+    const results: Array<{ institution: string; status: string; error?: string; error_code?: string; accounts?: number; added?: number }> = []
 
     for (const item of items) {
       // Skip CSV-imported items — they don't have a real Plaid access token
@@ -82,6 +82,7 @@ serve(async (req) => {
       }
 
       let itemAccountsUpdated = 0
+      let itemAccountsAdded = 0
       for (const acct of data.accounts || []) {
         const upd = await supabase
           .from('accounts')
@@ -92,9 +93,28 @@ serve(async (req) => {
           })
           .eq('plaid_account_id', acct.account_id)
           .select('id')
+
         if (upd.data && upd.data.length > 0) {
           itemAccountsUpdated++
           totalAccounts++
+        } else {
+          // New account picked up via update-mode account selection — insert it.
+          const { error: insErr } = await supabase.from('accounts').insert({
+            plaid_item_id: item.id,
+            plaid_account_id: acct.account_id,
+            name: acct.name || acct.official_name || 'Untitled',
+            type: acct.type,
+            subtype: acct.subtype,
+            mask: acct.mask,
+            current_balance: acct.balances.current,
+            available_balance: acct.balances.available,
+          })
+          if (!insErr) {
+            itemAccountsAdded++
+            totalAccounts++
+          } else {
+            console.error(`[${item.institution_name}] insert failed for ${acct.name}:`, insErr.message)
+          }
         }
       }
 
@@ -102,6 +122,7 @@ serve(async (req) => {
         institution: item.institution_name,
         status: 'ok',
         accounts: itemAccountsUpdated,
+        added: itemAccountsAdded,
       })
 
       // Update last_synced_at and clear any prior error

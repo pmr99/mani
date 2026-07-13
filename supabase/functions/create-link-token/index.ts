@@ -53,8 +53,11 @@ serve(async (req) => {
     }
 
     if (updateAccessToken) {
-      // Update mode: pass access_token, NO products (Plaid derives from existing item)
+      // Update mode: pass access_token, NO products (Plaid derives from existing item).
+      // account_selection_enabled: true lets the user ADD accounts to the existing item
+      // (e.g. picking up brokerage accounts that weren't originally selected).
       body.access_token = updateAccessToken
+      body.update = { account_selection_enabled: true }
       console.log('[create-link-token] UPDATE MODE for:', institutionName)
     } else {
       // Normal mode: new link
